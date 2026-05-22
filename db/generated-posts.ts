@@ -7,6 +7,10 @@ import {
   type AffiliateLink,
   type GeneratedPost,
 } from "@/db/schema";
+import {
+  contentStudioGoals,
+  contentStudioTones,
+} from "@/lib/content-studio";
 import type {
   ContentStudioOutput,
   ContentStudioRequest,
@@ -28,13 +32,19 @@ export type ContentStudioAffiliateLink = Pick<
 export type RecentGeneratedPost = {
   id: string;
   linkTitle: string;
-  platform: string;
-  goal: string;
+  platform: ContentStudioRequest["platform"];
+  goal: (typeof contentStudioGoals)[number];
   audience: string;
-  tone: string;
+  tone: (typeof contentStudioTones)[number];
   generatedText: string;
   outputJson: unknown;
   createdAt: Date;
+};
+
+export type GeneratedPostDetail = RecentGeneratedPost & {
+  audience: string;
+  extraContext: string | null;
+  linkId: string;
 };
 
 export async function getActiveAffiliateLinksForContentStudio(userId: string) {
@@ -117,7 +127,7 @@ export async function getRecentGeneratedPostsForUser(
   userId: string,
   limit = 6
 ): Promise<RecentGeneratedPost[]> {
-  return getDb()
+  const rows = await getDb()
     .select({
       id: generatedPostsTable.id,
       linkTitle: affiliateLinksTable.title,
@@ -137,4 +147,54 @@ export async function getRecentGeneratedPostsForUser(
     .where(eq(generatedPostsTable.userId, userId))
     .orderBy(desc(generatedPostsTable.createdAt))
     .limit(limit);
+
+  return rows.map((row) => ({
+    ...row,
+    platform: row.platform as ContentStudioRequest["platform"],
+    goal: row.goal as (typeof contentStudioGoals)[number],
+    tone: row.tone as (typeof contentStudioTones)[number],
+  }));
+}
+
+export async function getGeneratedPostForUser(
+  userId: string,
+  id: string
+): Promise<GeneratedPostDetail | null> {
+  const [post] = await getDb()
+    .select({
+      id: generatedPostsTable.id,
+      linkId: generatedPostsTable.linkId,
+      linkTitle: affiliateLinksTable.title,
+      platform: generatedPostsTable.platform,
+      goal: generatedPostsTable.goal,
+      audience: generatedPostsTable.audience,
+      tone: generatedPostsTable.tone,
+      extraContext: generatedPostsTable.extraContext,
+      generatedText: generatedPostsTable.generatedText,
+      outputJson: generatedPostsTable.outputJson,
+      createdAt: generatedPostsTable.createdAt,
+    })
+    .from(generatedPostsTable)
+    .innerJoin(
+      affiliateLinksTable,
+      eq(affiliateLinksTable.id, generatedPostsTable.linkId)
+    )
+    .where(
+      and(
+        eq(generatedPostsTable.id, id),
+        eq(generatedPostsTable.userId, userId)
+      )
+    )
+    .limit(1);
+
+  if (!post) {
+    return null;
+  }
+
+  return {
+    ...post,
+    platform: post.platform as ContentStudioRequest["platform"],
+    goal: post.goal as (typeof contentStudioGoals)[number],
+    tone: post.tone as (typeof contentStudioTones)[number],
+  };
 }
