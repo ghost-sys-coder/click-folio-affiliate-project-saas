@@ -38,7 +38,11 @@ function isActiveRoute(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function AdminSidebar() {
+export function AdminSidebar({
+  publicProfileHref,
+}: {
+  publicProfileHref: string;
+}) {
   const pathname = usePathname();
 
   return (
@@ -108,7 +112,13 @@ export function AdminSidebar() {
                 return (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton asChild tooltip={item.title}>
-                      <Link href={item.href}>
+                      <Link
+                        href={
+                          item.title === "Public Page"
+                            ? publicProfileHref
+                            : item.href
+                        }
+                      >
                         <Icon />
                         <span>{item.title}</span>
                       </Link>
@@ -153,7 +163,7 @@ export function AdminSidebar() {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href="/">View public page</Link>
+                  <Link href={publicProfileHref}>View public page</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <SignOutButton redirectUrl="/">

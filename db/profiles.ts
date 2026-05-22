@@ -38,6 +38,7 @@ export async function getOnboardingStateByClerkUserId(clerkUserId: string) {
       userId: usersTable.id,
       isDeleted: usersTable.isDeleted,
       profileId: profilesTable.id,
+      username: profilesTable.username,
     })
     .from(usersTable)
     .leftJoin(profilesTable, eq(profilesTable.userId, usersTable.id))
@@ -45,12 +46,13 @@ export async function getOnboardingStateByClerkUserId(clerkUserId: string) {
     .limit(1);
 
   if (!row || row.isDeleted) {
-    return { userId: null, profileId: null };
+    return { userId: null, profileId: null, username: null };
   }
 
   return {
     userId: row.userId,
     profileId: row.profileId,
+    username: row.username,
   };
 }
 

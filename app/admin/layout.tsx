@@ -27,7 +27,7 @@ const AdminDashboardLayout = async ({ children }: { children: React.ReactNode })
     <AdminThemeShell>
       <TooltipProvider>
         <SidebarProvider>
-          <AdminSidebar />
+          <AdminSidebar publicProfileHref={`/u/${onboardingState.username}`} />
           <SidebarInset>
             <header className="sticky top-0 z-10 flex h-14 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur supports-backdrop-filter:bg-background/80">
               <SidebarTrigger />

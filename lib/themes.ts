@@ -5,6 +5,14 @@ export const appThemes = {
 
 export type AppTheme = (typeof appThemes)[keyof typeof appThemes];
 
+export function normalizeAppTheme(theme: string | null | undefined): AppTheme {
+  if (theme === appThemes.signalPurple) {
+    return appThemes.signalPurple;
+  }
+
+  return appThemes.growthMint;
+}
+
 export function themeAttribute(theme: AppTheme) {
   return { "data-theme": theme };
 }
