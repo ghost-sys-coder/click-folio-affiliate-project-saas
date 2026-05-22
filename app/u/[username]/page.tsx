@@ -12,6 +12,7 @@ const getCachedPublicProfileByUsername = cache(getPublicProfileByUsername);
 
 type PublicProfileRouteProps = {
   params: Promise<{ username: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
 export async function generateMetadata({
@@ -67,8 +68,10 @@ export async function generateMetadata({
 
 export default async function UserPublicProfilePage({
   params,
+  searchParams,
 }: PublicProfileRouteProps) {
   const { username } = await params;
+  const resolvedSearchParams = await searchParams;
   const profile = await getCachedPublicProfileByUsername(
     normalizeUsernameParam(username)
   );
@@ -79,7 +82,13 @@ export default async function UserPublicProfilePage({
 
   const links = await getActiveAffiliateLinksByProfileId(profile.id);
 
-  return <PublicProfilePage profile={profile} links={links} />;
+  return (
+    <PublicProfilePage
+      profile={profile}
+      links={links}
+      trackingParams={resolvedSearchParams}
+    />
+  );
 }
 
 function normalizeUsernameParam(username: string) {

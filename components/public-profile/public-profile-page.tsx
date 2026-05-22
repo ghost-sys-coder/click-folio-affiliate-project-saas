@@ -15,6 +15,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import type { PublicAffiliateLink, PublicProfile } from "@/db/public-profiles";
+import {
+  buildTrackedGoHref,
+  type TrackingSearchParams,
+} from "@/lib/click-tracking";
 import { appThemes, normalizeAppTheme, themeAttribute } from "@/lib/themes";
 
 type PublishedProfile = NonNullable<PublicProfile>;
@@ -22,9 +26,14 @@ type PublishedProfile = NonNullable<PublicProfile>;
 type PublicProfilePageProps = {
   links: PublicAffiliateLink[];
   profile: PublishedProfile;
+  trackingParams?: TrackingSearchParams;
 };
 
-export function PublicProfilePage({ links, profile }: PublicProfilePageProps) {
+export function PublicProfilePage({
+  links,
+  profile,
+  trackingParams,
+}: PublicProfilePageProps) {
   const theme = normalizeAppTheme(profile.theme);
   const niche = formatLabel(profile.niche);
 
@@ -121,7 +130,11 @@ export function PublicProfilePage({ links, profile }: PublicProfilePageProps) {
           {links.length > 0 ? (
             <div className="grid gap-3">
               {links.map((link) => (
-                <PublicAffiliateLinkCard key={link.id} link={link} />
+                <PublicAffiliateLinkCard
+                  key={link.id}
+                  link={link}
+                  trackingParams={trackingParams}
+                />
               ))}
             </div>
           ) : (
@@ -160,10 +173,16 @@ function Avatar({
   );
 }
 
-function PublicAffiliateLinkCard({ link }: { link: PublicAffiliateLink }) {
+function PublicAffiliateLinkCard({
+  link,
+  trackingParams,
+}: {
+  link: PublicAffiliateLink;
+  trackingParams?: TrackingSearchParams;
+}) {
   return (
     <Link
-      href={`/go/${link.id}`}
+      href={buildTrackedGoHref(link.id, trackingParams)}
       className="group block rounded-xl focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
     >
       <Card className="border-border/70 bg-card transition group-hover:-translate-y-0.5 group-hover:border-primary/40 group-hover:shadow-lg">

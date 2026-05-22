@@ -3,8 +3,11 @@ import assert from "node:assert/strict";
 
 import {
   buildClickTrackingInput,
+  buildTrackedGoHref,
   hashIpAddress,
+  parseBrowser,
   parseDeviceType,
+  parseOperatingSystem,
 } from "../lib/click-tracking.ts";
 
 test("parses basic device type from user agent", () => {
@@ -34,8 +37,10 @@ test("builds click tracking input from request metadata", async () => {
     {
       headers: {
         referer: "https://creator.example/post",
-        "user-agent": "Mozilla/5.0 (Android 14; Mobile) AppleWebKit/537.36",
+        "user-agent":
+          "Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 Chrome/121.0.0.0 Mobile Safari/537.36",
         "x-forwarded-for": "203.0.113.10, 198.51.100.2",
+        "x-vercel-ip-country": "UG",
       },
     }
   );
@@ -50,8 +55,14 @@ test("builds click tracking input from request metadata", async () => {
   assert.equal(input.profileId, "profile-id");
   assert.equal(input.userId, "user-id");
   assert.equal(input.referer, "https://creator.example/post");
-  assert.equal(input.userAgent, "Mozilla/5.0 (Android 14; Mobile) AppleWebKit/537.36");
+  assert.equal(
+    input.userAgent,
+    "Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 Chrome/121.0.0.0 Mobile Safari/537.36"
+  );
   assert.equal(input.deviceType, "mobile");
+  assert.equal(input.browser, "Chrome");
+  assert.equal(input.os, "Android");
+  assert.equal(input.country, "UG");
   assert.equal(input.source, "newsletter");
   assert.equal(input.medium, "email");
   assert.equal(input.campaign, "launch");
@@ -70,4 +81,28 @@ test("does not store an IP hash when no forwarding header is present", async () 
   });
 
   assert.equal(input.ipAddressHash, null);
+});
+
+test("parses browser and operating system from user agent", () => {
+  const safari =
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/605.1.15 Version/17.0 Safari/605.1.15";
+  const edge =
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/121.0.0.0 Safari/537.36 Edg/121.0.0.0";
+
+  assert.equal(parseBrowser(safari), "Safari");
+  assert.equal(parseOperatingSystem(safari), "macOS");
+  assert.equal(parseBrowser(edge), "Edge");
+  assert.equal(parseOperatingSystem(edge), "Windows");
+});
+
+test("preserves public page UTM params in go link hrefs", () => {
+  assert.equal(
+    buildTrackedGoHref("link-id", {
+      utm_source: "instagram",
+      utm_medium: "social",
+      utm_campaign: "spring launch",
+      ignored: "value",
+    }),
+    "/go/link-id?utm_source=instagram&utm_medium=social&utm_campaign=spring+launch"
+  );
 });
