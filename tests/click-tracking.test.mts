@@ -34,7 +34,7 @@ test("parses basic device type from user agent", () => {
 
 test("builds click tracking input from request metadata", async () => {
   const request = new Request(
-    "https://clickfolio.test/go/link-id?utm_source=newsletter&utm_medium=email&utm_campaign=launch",
+    "https://clickfolio.test/go/link-id?utm_source=newsletter&utm_medium=email&utm_campaign=launch&utm_content=hero_button&utm_term=affiliate_tools",
     {
       headers: {
         referer: "https://creator.example/post",
@@ -67,6 +67,8 @@ test("builds click tracking input from request metadata", async () => {
   assert.equal(input.source, "newsletter");
   assert.equal(input.medium, "email");
   assert.equal(input.campaign, "launch");
+  assert.equal(input.content, "hero_button");
+  assert.equal(input.term, "affiliate_tools");
   assert.equal(input.ipAddressHash, await hashIpAddress("203.0.113.10"));
   assert.ok(input.createdAt instanceof Date);
   assert.ok(input.updatedAt instanceof Date);
@@ -102,10 +104,16 @@ test("preserves public page UTM params in go link hrefs", () => {
       utm_source: "instagram",
       utm_medium: "social",
       utm_campaign: "spring launch",
+      utm_content: "bio button",
+      utm_term: "creator tools",
       ignored: "value",
     }),
-    "/go/link-id?utm_source=instagram&utm_medium=social&utm_campaign=spring+launch"
+    "/go/link-id?utm_source=instagram&utm_medium=social&utm_campaign=spring+launch&utm_content=bio+button&utm_term=creator+tools"
   );
+});
+
+test("keeps go link href clean when no UTM params exist", () => {
+  assert.equal(buildTrackedGoHref("link-id", { ignored: "value" }), "/go/link-id");
 });
 
 test("detects prefetch requests that should not be tracked as clicks", () => {

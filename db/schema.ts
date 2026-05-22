@@ -88,6 +88,8 @@ export const linkClicksTable = pgTable("link_clicks", {
     source: text("source"),
     medium: text("medium"),
     campaign: text("campaign"),
+    content: text("content"),
+    term: text("term"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow()
 });

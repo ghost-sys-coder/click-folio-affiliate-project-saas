@@ -18,7 +18,13 @@ export type TrackingSearchParams = Record<
   string | string[] | undefined
 >;
 
-const trackedUtmKeys = ["utm_source", "utm_medium", "utm_campaign"] as const;
+const trackedUtmKeys = [
+  "utm_source",
+  "utm_medium",
+  "utm_campaign",
+  "utm_content",
+  "utm_term",
+] as const;
 
 export async function buildClickTrackingInput(
   request: Request,
@@ -43,6 +49,8 @@ export async function buildClickTrackingInput(
     source: url.searchParams.get("utm_source"),
     medium: url.searchParams.get("utm_medium"),
     campaign: url.searchParams.get("utm_campaign"),
+    content: url.searchParams.get("utm_content"),
+    term: url.searchParams.get("utm_term"),
     createdAt: timestamp,
     updatedAt: timestamp,
   };

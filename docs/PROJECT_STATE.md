@@ -15,9 +15,9 @@ Last updated: May 22, 2026
 
 ## Current Product State
 
-Clickfolio is an authenticated affiliate workspace. The onboarding flow is complete, and authenticated users with a local profile can access the admin dashboard.
+Clickfolio is an authenticated affiliate workspace with public affiliate profile pages. The onboarding flow is complete, and authenticated users with a local profile can access the admin dashboard.
 
-The current implemented admin phase is affiliate link management.
+The current implemented phases are affiliate link management, public profile rendering, and click tracking redirects.
 
 ## Authentication and Onboarding
 
@@ -28,6 +28,7 @@ The current implemented admin phase is affiliate link management.
 - Admin layout resolves the Clerk user to the local onboarding state.
 - Users without a profile are redirected to `/onboarding`.
 - The onboarding flow should not be changed unless future features require profile fields.
+- The admin sidebar public page link resolves to the authenticated user's `/u/[username]` profile.
 
 ## Database State
 
@@ -69,6 +70,7 @@ Status enum values:
 Known database setup note:
 
 - The code expects an `affiliate_links` table.
+- The code expects a `link_clicks` table for click tracking.
 - If the database has not been migrated, `/admin/links` renders a setup state instead of a runtime error.
 - Run:
 
@@ -78,6 +80,90 @@ npx drizzle-kit migrate
 ```
 
 For local development only, `npx drizzle-kit push` can be used to sync the schema faster.
+
+## Public Profile Pages
+
+Implemented route:
+
+- `/u/[username]`
+
+Implemented behavior:
+
+- Fetches profile by username.
+- Returns the route-level not-found/unavailable page if the profile does not exist or is not published.
+- Fetches only active affiliate links for that profile.
+- Renders avatar image or initials.
+- Renders display name, username, bio, niche, cover image, and affiliate disclosure.
+- Renders active links as public product cards.
+- Public product cards link to `/go/[linkId]`, never directly to `destinationUrl`.
+- Uses the profile theme when present.
+- Defaults unknown or missing themes to Growth Mint.
+- Adds dynamic SEO metadata using display name and niche.
+- Shows an empty state when there are no active links.
+- Public profile pages do not require authentication.
+- UTM params on the public profile URL are preserved into the rendered `/go/[linkId]` card links.
+
+Important files:
+
+- Route: `app/u/[username]/page.tsx`
+- Unavailable page: `app/u/[username]/not-found.tsx`
+- Public profile component: `components/public-profile/public-profile-page.tsx`
+- Public profile queries: `db/public-profiles.ts`
+- Theme normalization: `lib/themes.ts`
+
+## Click Tracking
+
+Implemented route:
+
+- `/go/[linkId]`
+
+Implemented behavior:
+
+- Finds the affiliate link by ID.
+- Confirms the link exists and is `active`.
+- Inserts a `link_clicks` row before redirecting.
+- Redirects to `affiliate_links.destinationUrl`.
+- If click tracking insert fails, the visitor still redirects to the destination URL.
+- If the link does not exist, redirects to `/go/unavailable`.
+- If the link exists but is inactive or archived, redirects to the owning public profile when possible.
+- Does not store raw IP addresses.
+- Hashes forwarded IP data before storage.
+- Does not build or expose the analytics dashboard yet.
+
+Captured click fields:
+
+- `affiliateLinkId`
+- `profileId`
+- `userId`
+- `referer`
+- `userAgent`
+- `ipAddressHash`
+- `country`
+- `deviceType`
+- `browser`
+- `os`
+- `source`
+- `medium`
+- `campaign`
+- `createdAt`
+- `updatedAt`
+
+Tracking details:
+
+- `country` is read from `x-vercel-ip-country` or `cf-ipcountry`.
+- `source`, `medium`, and `campaign` are read from `utm_source`, `utm_medium`, and `utm_campaign` on `/go/[linkId]`.
+- Public profile pages preserve those UTM params into `/go` links.
+- Browser, OS, and device type are parsed from the user agent with basic detection.
+- The public product cards use plain `<a>` elements instead of `next/link` so Next.js does not prefetch `/go` tracking endpoints.
+- `/go/[linkId]` returns `204` for known prefetch requests before any DB lookup or click insert.
+
+Important files:
+
+- Route handler: `app/go/[linkId]/route.ts`
+- Unavailable page: `app/go/unavailable/page.tsx`
+- Query helper: `db/click-tracking.ts`
+- Tracking utilities: `lib/click-tracking.ts`
+- Tests: `tests/click-tracking.test.mts`
 
 ## Affiliate Link Management
 
@@ -195,6 +281,10 @@ UI primitives added or used:
 - `components/ui/card.tsx`
 - `components/ui/field.tsx`
 
+Public profile:
+
+- `components/public-profile/public-profile-page.tsx`
+
 ## Tests
 
 Current test files:
@@ -202,6 +292,7 @@ Current test files:
 - `tests/affiliate-link-import.test.mts`
 - `tests/clerk-user-data.test.mts`
 - `tests/cloudinary.test.mts`
+- `tests/click-tracking.test.mts`
 - `tests/database-errors.test.mts`
 - `tests/onboarding-flow.test.mts`
 - `tests/onboarding-submit.test.mts`
@@ -217,7 +308,7 @@ node --test tests\*.test.mts
 
 Current test count:
 
-- 20 passing tests
+- 26 passing tests
 
 Node test runner warnings:
 
@@ -234,30 +325,38 @@ Important note:
 - Installing `xlsx` reported npm audit vulnerabilities.
 - `npm audit fix --force` was not run because it can introduce breaking dependency changes.
 
+## Deployment Notes
+
+- `next.config.ts` contains a narrow Vercel workaround for a Vercel CLI `54.3.0` / `@vercel/next@4.17.3` adapter issue.
+- The issue occurs when Vercel Preview Comments injection runs through Next.js 16.2.x adapter `modifyConfig`; the Vercel adapter expects `ctx.projectDir`, but that value is not provided at that phase.
+- The workaround disables only `VERCEL_PREVIEW_COMMENTS_ENABLED` during Vercel builds. Normal app build and deployment still use the Vercel adapter.
+
 ## Not Implemented Yet
 
 The following are intentionally not implemented yet:
 
-- Public profile rendering.
-- Click tracking.
 - AI content generation.
 - Bulk import that creates multiple links in one action.
 - Import preview table for multiple rows.
 - CSV/Excel export.
-- Public tracking redirect URLs.
+- Analytics dashboard UI.
 
 ## Recommended Next Steps
 
-1. Add migration files for the current Drizzle schema and apply them to the active database.
+1. Add or verify migration files for the current Drizzle schema and apply them to the active database.
 2. Add create/update success feedback similar to the delete feedback.
-3. Add a bulk import workflow:
+3. Add an analytics dashboard for `link_clicks`:
+   - Click counts by link.
+   - Referrer, country, device, browser, and OS breakdowns.
+   - UTM campaign/source/medium breakdowns.
+4. Add a bulk import workflow:
    - Parse many rows.
    - Show a preview table.
    - Validate each row.
    - Allow users to fix invalid rows.
    - Create many links in one protected server action.
-4. Add stronger delete UX:
+5. Add stronger delete UX:
    - Optional undo via archive instead of hard delete.
    - Toast or dismissible feedback.
-5. Add focused tests for affiliate link server-action authorization boundaries.
-6. Review npm audit output for `xlsx` and decide whether to keep `xlsx`, pin a safer version, or replace it.
+6. Add focused tests for affiliate link server-action authorization boundaries.
+7. Review npm audit output for `xlsx` and decide whether to keep `xlsx`, pin a safer version, or replace it.

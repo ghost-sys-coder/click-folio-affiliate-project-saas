@@ -5,6 +5,7 @@ import {
   FileText,
   LayoutDashboard,
   Link2,
+  Megaphone,
   Settings,
   Sparkles,
 } from "lucide-react";
@@ -39,6 +40,11 @@ export const adminNavSections: AdminNavSection[] = [
         title: "Analytics",
         href: "/admin/analytics",
         icon: BarChart3,
+      },
+      {
+        title: "Campaign URLs",
+        href: "/admin/campaigns",
+        icon: Megaphone,
       },
       {
         title: "Content Studio",
