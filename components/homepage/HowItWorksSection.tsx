@@ -22,17 +22,17 @@ const HowItWorksSection = () => {
     return (
         <section
             id="how-it-works"
-            className="border-y border-white/10 bg-[#0b0b18] px-6 py-24 lg:px-8"
+            className="border-y border-border bg-background px-6 py-24 lg:px-8"
         >
             <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.9fr_1.1fr]">
                 <div>
-                    <p className="text-sm font-semibold uppercase tracking-[0.25rem] text-emerald-300">
+                    <p className="text-sm font-semibold uppercase tracking-[0.25rem] text-secondary">
                         Workflow
                     </p>
                     <h2 className="mt-4 text-4xl font-bold tracking-tight">
                         From messy links to measurable promotion.
                     </h2>
-                    <p className="mt-4 text-lg leading-8 text-white/65">
+                    <p className="mt-4 text-lg leading-8 text-muted-foreground">
                         The product loop is simple. Add links, publish your page, promote
                         the page, then use the data to decide what deserves more effort.
                     </p>
@@ -42,13 +42,13 @@ const HowItWorksSection = () => {
                     {steps.map((step, index) => (
                         <div
                             key={step.title}
-                            className="rounded-3xl border border-white/10 bg-white/0.04 p-6"
+                            className="rounded-3xl border border-border bg-card p-6"
                         >
-                            <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-violet-600 text-sm font-bold">
+                            <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
                                 {index + 1}
                             </div>
                             <h3 className="text-xl font-semibold">{step.title}</h3>
-                            <p className="mt-2 leading-7 text-white/60">{step.description}</p>
+                            <p className="mt-2 leading-7 text-muted-foreground">{step.description}</p>
                         </div>
                     ))}
                 </div>

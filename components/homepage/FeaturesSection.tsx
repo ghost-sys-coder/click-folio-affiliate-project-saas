@@ -30,16 +30,16 @@ const features = [
 
 const FeaturesSection = () => {
     return (
-        <section id="features" className="bg-white px-6 py-24 text-slate-950 lg:px-8">
+        <section id="features" className="bg-surface px-6 py-24 text-foreground lg:px-8">
             <div className="mx-auto max-w-7xl">
                 <div className="max-w-2xl">
-                    <p className="text-sm font-semibold uppercase tracking-[0.25rem] text-violet-600">
+                    <p className="text-sm font-semibold uppercase tracking-[0.25rem] text-accent">
                         Features
                     </p>
                     <h2 className="mt-4 text-4xl font-bold tracking-tight">
                         Everything needed for the first serious version.
                     </h2>
-                    <p className="mt-4 text-lg leading-8 text-slate-600">
+                    <p className="mt-4 text-lg leading-8 text-muted-foreground">
                         Clickfolio avoids bloated tools. It focuses on the core affiliate
                         workflow: organize links, share one page, track clicks, and
                         promote consistently.
@@ -50,13 +50,13 @@ const FeaturesSection = () => {
                     {features.map((feature) => (
                         <div
                             key={feature.title}
-                            className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
+                            className="rounded-3xl border border-border bg-card p-6 shadow-sm"
                         >
-                            <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-50 text-violet-600">
+                            <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-accent">
                                 <feature.icon className="h-6 w-6" />
                             </div>
                             <h3 className="text-lg font-semibold">{feature.title}</h3>
-                            <p className="mt-3 text-sm leading-6 text-slate-600">
+                            <p className="mt-3 text-sm leading-6 text-muted-foreground">
                                 {feature.description}
                             </p>
                         </div>

@@ -1,6 +1,4 @@
 import React from 'react';
-import Link from "next/link";
-import { Check } from "lucide-react";
 import PricingCard from './PricingCard';
 
 const plans = [
@@ -54,16 +52,16 @@ export type Plan = (typeof plans)[number];
 
 const PricingSection = () => {
   return (
-    <section id="pricing" className="bg-slate-50 px-6 py-24 text-slate-950 lg:px-8">
+    <section id="pricing" className="bg-surface px-6 py-24 text-foreground lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="mx-auto max-w-2xl text-center">
-            <p className="text-sm font-semibold uppercase tracking-[0.25rem] text-violet-600">
+            <p className="text-sm font-semibold uppercase tracking-[0.25rem] text-accent">
               Pricing
             </p>
             <h2 className="mt-4 text-4xl font-bold tracking-tight">
               Start small. Upgrade when clicks matter.
             </h2>
-            <p className="mt-4 text-lg leading-8 text-slate-600">
+            <p className="mt-4 text-lg leading-8 text-muted-foreground">
               Keep the free plan useful, but make serious promotion a paid
               workflow.
             </p>
