@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useActionState, useState } from "react";
 import { ExternalLink, Save } from "lucide-react";
 
-import { AffiliateLinkJsonImport } from "@/components/admin/affiliate-link-json-import";
+import { AffiliateLinkDataImport } from "@/components/admin/affiliate-link-data-import";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -65,7 +65,7 @@ export function AffiliateLinkForm({
   return (
     <form action={formAction} className="grid gap-4">
       {enableJsonImport ? (
-        <AffiliateLinkJsonImport
+        <AffiliateLinkDataImport
           currentValues={values}
           onImport={setValues}
         />
