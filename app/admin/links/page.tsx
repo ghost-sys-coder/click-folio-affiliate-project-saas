@@ -18,6 +18,18 @@ import {
   deleteAffiliateLink,
   toggleAffiliateLinkStatus,
 } from "@/actions/affiliate-links";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -265,16 +277,44 @@ function AffiliateLinkCard({ link }: { link: AffiliateLink }) {
               </Button>
             </form>
           ) : null}
-          <form action={deleteAffiliateLink}>
-            <input type="hidden" name="id" value={link.id} />
-            <Button type="submit" variant="destructive" size="sm">
-              <Trash2 className="size-3.5" />
-              Delete
-            </Button>
-          </form>
+          <DeleteAffiliateLinkDialog link={link} />
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function DeleteAffiliateLinkDialog({ link }: { link: AffiliateLink }) {
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button type="button" variant="destructive" size="sm">
+          <Trash2 className="size-3.5" />
+          Delete
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogMedia>
+            <Trash2 className="size-5" />
+          </AlertDialogMedia>
+          <AlertDialogTitle>Delete this affiliate link?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This will permanently remove {link.title} from your workspace. This
+            action cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel type="button">Cancel</AlertDialogCancel>
+          <form action={deleteAffiliateLink}>
+            <input type="hidden" name="id" value={link.id} />
+            <AlertDialogAction type="submit" variant="destructive">
+              Delete link
+            </AlertDialogAction>
+          </form>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
 
