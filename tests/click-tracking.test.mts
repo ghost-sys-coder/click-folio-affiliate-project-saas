@@ -5,6 +5,7 @@ import {
   buildClickTrackingInput,
   buildTrackedGoHref,
   hashIpAddress,
+  isTrackingPrefetchRequest,
   parseBrowser,
   parseDeviceType,
   parseOperatingSystem,
@@ -104,5 +105,36 @@ test("preserves public page UTM params in go link hrefs", () => {
       ignored: "value",
     }),
     "/go/link-id?utm_source=instagram&utm_medium=social&utm_campaign=spring+launch"
+  );
+});
+
+test("detects prefetch requests that should not be tracked as clicks", () => {
+  assert.equal(
+    isTrackingPrefetchRequest(
+      new Request("https://clickfolio.test/go/link-id", {
+        headers: { "next-router-prefetch": "1" },
+      })
+    ),
+    true
+  );
+  assert.equal(
+    isTrackingPrefetchRequest(
+      new Request("https://clickfolio.test/go/link-id", {
+        headers: { purpose: "prefetch" },
+      })
+    ),
+    true
+  );
+  assert.equal(
+    isTrackingPrefetchRequest(
+      new Request("https://clickfolio.test/go/link-id", {
+        headers: { "sec-purpose": "prefetch" },
+      })
+    ),
+    true
+  );
+  assert.equal(
+    isTrackingPrefetchRequest(new Request("https://clickfolio.test/go/link-id")),
+    false
   );
 });

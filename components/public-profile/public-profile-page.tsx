@@ -1,6 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
 
-import Link from "next/link";
 import {
   ArrowUpRight,
   BadgeCheck,
@@ -181,7 +180,7 @@ function PublicAffiliateLinkCard({
   trackingParams?: TrackingSearchParams;
 }) {
   return (
-    <Link
+    <a
       href={buildTrackedGoHref(link.id, trackingParams)}
       className="group block rounded-xl focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
     >
@@ -229,7 +228,7 @@ function PublicAffiliateLinkCard({
           </span>
         </CardContent>
       </Card>
-    </Link>
+    </a>
   );
 }
 

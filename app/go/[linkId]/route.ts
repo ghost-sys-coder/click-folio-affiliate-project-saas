@@ -1,7 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { getAffiliateLinkForRedirect, createLinkClick } from "@/db/click-tracking";
-import { buildClickTrackingInput } from "@/lib/click-tracking";
+import {
+  buildClickTrackingInput,
+  isTrackingPrefetchRequest,
+} from "@/lib/click-tracking";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +13,10 @@ type GoRouteContext = {
 };
 
 export async function GET(request: NextRequest, context: GoRouteContext) {
+  if (isTrackingPrefetchRequest(request)) {
+    return new NextResponse(null, { status: 204 });
+  }
+
   const { linkId } = await context.params;
   const link = await getAffiliateLinkForRedirect(linkId).catch(() => null);
 

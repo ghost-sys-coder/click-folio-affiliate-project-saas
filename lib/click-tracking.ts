@@ -156,6 +156,17 @@ export function buildTrackedGoHref(
   return queryString ? `/go/${linkId}?${queryString}` : `/go/${linkId}`;
 }
 
+export function isTrackingPrefetchRequest(request: Request) {
+  const purpose = request.headers.get("purpose")?.toLowerCase();
+  const secPurpose = request.headers.get("sec-purpose")?.toLowerCase();
+
+  return (
+    request.headers.has("next-router-prefetch") ||
+    purpose === "prefetch" ||
+    secPurpose === "prefetch"
+  );
+}
+
 export async function hashIpAddress(ipAddress: string) {
   const salt = process.env.CLICK_TRACKING_IP_SALT ?? "";
 
