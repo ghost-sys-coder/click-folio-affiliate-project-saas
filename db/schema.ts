@@ -1,4 +1,4 @@
-import { integer, text, boolean, pgTable, timestamp, uuid, numeric, json, pgEnum } from "drizzle-orm/pg-core";
+import { integer, text, boolean, pgTable, timestamp, uuid, numeric, json, jsonb, pgEnum } from "drizzle-orm/pg-core";
 
 // create user table
 export const usersTable = pgTable("users", {
@@ -146,4 +146,20 @@ export const aiContentTable = pgTable("ai_content", {
 });
 
 export type AIContent = typeof aiContentTable.$inferSelect;
+
+export const generatedPostsTable = pgTable("generated_posts", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull().references(() => usersTable.id),
+    linkId: uuid("link_id").notNull().references(() => affiliateLinksTable.id),
+    platform: text("platform").notNull(),
+    goal: text("goal").notNull(),
+    audience: text("audience").notNull(),
+    tone: text("tone").notNull(),
+    extraContext: text("extra_context"),
+    outputJson: jsonb("output_json").notNull(),
+    generatedText: text("generated_text").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow()
+});
+
+export type GeneratedPost = typeof generatedPostsTable.$inferSelect;
 
