@@ -118,6 +118,10 @@ export type ContentStudioOutput =
   | EmailContentOutput;
 
 export type ContentStudioProvider = "openai" | "gemini";
+export type GeneratedContentSection = {
+  title: string;
+  content: string;
+};
 
 export type ContentStudioProfileContext = {
   username: string;
@@ -341,6 +345,70 @@ export function stringifyGeneratedContent(output: ContentStudioOutput) {
     output.platformNotes.join("\n"),
     output.riskWarnings.join("\n"),
   ].join("\n\n");
+}
+
+export function buildGeneratedContentSections(
+  output: ContentStudioOutput
+): GeneratedContentSection[] {
+  if ("sceneOutline" in output) {
+    return [
+      { title: "Hooks", content: output.hooks.join("\n") },
+      {
+        title: "Scene outline",
+        content: output.sceneOutline
+          .map(
+            (scene) =>
+              `${scene.scene}\nVisual: ${scene.visual}\nVoiceover: ${scene.voiceover}\nOn-screen text: ${scene.onScreenText}`
+          )
+          .join("\n\n"),
+      },
+      { title: "Caption", content: output.caption },
+      { title: "CTA options", content: output.ctaOptions.join("\n") },
+      { title: "Disclosure", content: output.disclosureVersion },
+      {
+        title: "Hashtags or keywords",
+        content: output.hashtagsOrKeywords.join(" "),
+      },
+      { title: "Platform notes", content: output.platformNotes.join("\n") },
+      { title: "Risk warnings", content: output.riskWarnings.join("\n") },
+    ];
+  }
+
+  if ("statusPost" in output) {
+    return [
+      { title: "Status post", content: output.statusPost },
+      { title: "DM message", content: output.dmMessage },
+      { title: "Follow-up message", content: output.followUpMessage },
+      { title: "CTA options", content: output.ctaOptions.join("\n") },
+      { title: "Disclosure", content: output.disclosureVersion },
+      { title: "Risk warnings", content: output.riskWarnings.join("\n") },
+    ];
+  }
+
+  if ("emailBody" in output) {
+    return [
+      { title: "Subject lines", content: output.subjectLines.join("\n") },
+      { title: "Preview text", content: output.previewText },
+      { title: "Email body", content: output.emailBody },
+      { title: "CTA options", content: output.ctaOptions.join("\n") },
+      { title: "Disclosure", content: output.disclosureVersion },
+      { title: "Risk warnings", content: output.riskWarnings.join("\n") },
+    ];
+  }
+
+  return [
+    { title: "Hooks", content: output.hooks.join("\n") },
+    { title: "Main post", content: output.mainPost },
+    { title: "Short caption", content: output.shortCaption },
+    { title: "CTA options", content: output.ctaOptions.join("\n") },
+    { title: "Disclosure", content: output.disclosureVersion },
+    {
+      title: "Hashtags or keywords",
+      content: output.hashtagsOrKeywords.join(" "),
+    },
+    { title: "Platform notes", content: output.platformNotes.join("\n") },
+    { title: "Risk warnings", content: output.riskWarnings.join("\n") },
+  ];
 }
 
 function safeUrlHost(value: string) {

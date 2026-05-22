@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Clock3 } from "lucide-react";
 
 import type { RecentGenerationItem } from "@/components/admin/content-studio/types";
@@ -34,7 +35,11 @@ export function RecentGenerationsPanel({
         {generations.length > 0 ? (
           <div className="grid gap-3">
             {generations.map((item) => (
-              <div key={item.id} className="rounded-lg border bg-muted/20 p-3">
+              <Link
+                key={item.id}
+                href={`/admin/content/${item.id}`}
+                className="block rounded-lg border bg-muted/20 p-3 transition hover:border-primary/40 hover:bg-muted/30"
+              >
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge>{item.platform}</Badge>
                   <Badge variant="outline">{item.goal}</Badge>
@@ -47,7 +52,7 @@ export function RecentGenerationsPanel({
                 <p className="mt-2 text-xs text-muted-foreground">
                   {formatGenerationTime(item.createdAt)}
                 </p>
-              </div>
+              </Link>
             ))}
           </div>
         ) : (

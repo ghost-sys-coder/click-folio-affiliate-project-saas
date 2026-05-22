@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import {
   buildContentStudioPrompt,
+  buildGeneratedContentSections,
   contentStudioRequestSchema,
   getContentStudioOutputSchema,
   getContentStudioProviderOrder,
@@ -148,4 +149,21 @@ test("orders configured AI providers with OpenAI as default and Gemini fallback"
     }),
     ["gemini"]
   );
+});
+
+test("builds reusable display sections for saved generated output", () => {
+  const sections = buildGeneratedContentSections({
+    hooks: ["Hook one"],
+    mainPost: "Main post.",
+    shortCaption: "Short caption.",
+    ctaOptions: ["Review the details"],
+    disclosureVersion: "Affiliate disclosure.",
+    hashtagsOrKeywords: ["affiliate", "tools"],
+    platformNotes: ["Keep it specific."],
+    riskWarnings: ["No unsupported claims."],
+  });
+
+  assert.equal(sections[0]?.title, "Hooks");
+  assert.equal(sections[1]?.title, "Main post");
+  assert.match(sections[1]?.content ?? "", /Main post/);
 });
