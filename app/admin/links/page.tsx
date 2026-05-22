@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import {
   Archive,
   AlertTriangle,
+  CheckCircle2,
   Database,
   ExternalLink,
   Link2,
@@ -61,6 +62,12 @@ export default async function AdminLinksPage({
   const { userId: clerkUserId } = await auth();
   const params = await searchParams;
   const mutationFailed = params.mutation === "failed";
+  const linkDeleted =
+    params.linkDeleted === "success"
+      ? "success"
+      : params.linkDeleted === "failed"
+        ? "failed"
+        : null;
 
   if (!clerkUserId) {
     redirect("/sign-in?redirect_url=/admin/links");
@@ -108,10 +115,27 @@ export default async function AdminLinksPage({
       </div>
 
       {mutationFailed ? (
-        <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-          The link change was not saved. Check the database setup and try
-          again.
-        </div>
+        <FeedbackBanner
+          tone="error"
+          title="Link change not saved"
+          message="Check the database setup and try again."
+        />
+      ) : null}
+
+      {linkDeleted === "success" ? (
+        <FeedbackBanner
+          tone="success"
+          title="Affiliate link deleted"
+          message="The link was removed from your workspace."
+        />
+      ) : null}
+
+      {linkDeleted === "failed" ? (
+        <FeedbackBanner
+          tone="error"
+          title="Delete failed"
+          message="The link could not be deleted. It may have already been removed, or the database request failed."
+        />
       ) : null}
 
       {links.length === 0 ? (
@@ -141,6 +165,32 @@ export default async function AdminLinksPage({
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+function FeedbackBanner({
+  tone,
+  title,
+  message,
+}: {
+  tone: "success" | "error";
+  title: string;
+  message: string;
+}) {
+  const Icon = tone === "success" ? CheckCircle2 : AlertTriangle;
+  const className =
+    tone === "success"
+      ? "border-primary/30 bg-primary/10 text-foreground"
+      : "border-destructive/30 bg-destructive/10 text-destructive";
+
+  return (
+    <div className={`flex gap-3 rounded-lg border px-3 py-2 text-sm ${className}`}>
+      <Icon className="mt-0.5 size-4 shrink-0" />
+      <div className="grid gap-0.5">
+        <p className="font-medium">{title}</p>
+        <p className="text-muted-foreground">{message}</p>
+      </div>
     </div>
   );
 }

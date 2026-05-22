@@ -161,17 +161,23 @@ export async function deleteAffiliateLink(formData: FormData) {
   }
 
   const workspace = await requireAffiliateLinkWorkspace();
+  let deletedLink: Awaited<ReturnType<typeof deleteAffiliateLinkForWorkspace>>;
 
   try {
-    await deleteAffiliateLinkForWorkspace({
+    deletedLink = await deleteAffiliateLinkForWorkspace({
       id: validation.data.id,
       userId: workspace.userId,
     });
   } catch {
-    redirect("/admin/links?mutation=failed");
+    redirect("/admin/links?linkDeleted=failed");
+  }
+
+  if (!deletedLink) {
+    redirect("/admin/links?linkDeleted=failed");
   }
 
   revalidatePath("/admin/links");
+  redirect("/admin/links?linkDeleted=success");
 }
 
 async function requireAffiliateLinkWorkspace() {
