@@ -33,6 +33,7 @@ export default async function NewAffiliateLinkPage() {
       </div>
       <AffiliateLinkForm
         action={createAffiliateLink}
+        enableJsonImport
         initialValues={getDefaultAffiliateLinkValues(
           workspace.defaultButtonLabel
         )}

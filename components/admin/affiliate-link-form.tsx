@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { ExternalLink, Save } from "lucide-react";
 
+import { AffiliateLinkJsonImport } from "@/components/admin/affiliate-link-json-import";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -36,6 +37,7 @@ type AffiliateLinkFormAction = (
 
 type AffiliateLinkFormProps = {
   action: AffiliateLinkFormAction;
+  enableJsonImport?: boolean;
   initialValues: AffiliateLinkValues;
   submitLabel: string;
   title: string;
@@ -43,6 +45,7 @@ type AffiliateLinkFormProps = {
 
 export function AffiliateLinkForm({
   action,
+  enableJsonImport = false,
   initialValues,
   submitLabel,
   title,
@@ -50,16 +53,30 @@ export function AffiliateLinkForm({
   const [state, formAction, pending] = useActionState(action, {
     values: initialValues,
   });
-  const values = state.values;
+  const [values, setValues] = useState(initialValues);
+
+  function updateValue(field: keyof AffiliateLinkValues, value: string) {
+    setValues((currentValues) => ({
+      ...currentValues,
+      [field]: value,
+    }));
+  }
 
   return (
     <form action={formAction} className="grid gap-4">
+      {enableJsonImport ? (
+        <AffiliateLinkJsonImport
+          currentValues={values}
+          onImport={setValues}
+        />
+      ) : null}
+
       <Card className="border-border/70">
         <CardHeader className="border-b border-border/70">
           <CardTitle>{title}</CardTitle>
         </CardHeader>
         <CardContent>
-          <FieldGroup key={JSON.stringify(values)}>
+          <FieldGroup>
             {state.message ? (
               <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
                 {state.message}
@@ -72,7 +89,8 @@ export function AffiliateLinkForm({
                 <Input
                   id="title"
                   name="title"
-                  defaultValue={values.title}
+                  value={values.title}
+                  onChange={(event) => updateValue("title", event.target.value)}
                   aria-invalid={Boolean(state.errors?.title)}
                   placeholder="Creator tool bundle"
                 />
@@ -87,7 +105,10 @@ export function AffiliateLinkForm({
                   id="destinationUrl"
                   name="destinationUrl"
                   type="url"
-                  defaultValue={values.destinationUrl}
+                  value={values.destinationUrl}
+                  onChange={(event) =>
+                    updateValue("destinationUrl", event.target.value)
+                  }
                   aria-invalid={Boolean(state.errors?.destinationUrl)}
                   placeholder="https://example.com/deal"
                 />
@@ -100,7 +121,10 @@ export function AffiliateLinkForm({
               <Textarea
                 id="description"
                 name="description"
-                defaultValue={values.description}
+                value={values.description}
+                onChange={(event) =>
+                  updateValue("description", event.target.value)
+                }
                 aria-invalid={Boolean(state.errors?.description)}
                 placeholder="Short context for why this offer is useful."
               />
@@ -117,7 +141,10 @@ export function AffiliateLinkForm({
                   id="imageUrl"
                   name="imageUrl"
                   type="url"
-                  defaultValue={values.imageUrl}
+                  value={values.imageUrl}
+                  onChange={(event) =>
+                    updateValue("imageUrl", event.target.value)
+                  }
                   aria-invalid={Boolean(state.errors?.imageUrl)}
                   placeholder="https://example.com/product.png"
                 />
@@ -129,7 +156,10 @@ export function AffiliateLinkForm({
                 <Input
                   id="buttonLabel"
                   name="buttonLabel"
-                  defaultValue={values.buttonLabel}
+                  value={values.buttonLabel}
+                  onChange={(event) =>
+                    updateValue("buttonLabel", event.target.value)
+                  }
                   aria-invalid={Boolean(state.errors?.buttonLabel)}
                   placeholder="View Deal"
                 />
@@ -143,7 +173,10 @@ export function AffiliateLinkForm({
                 <Input
                   id="category"
                   name="category"
-                  defaultValue={values.category}
+                  value={values.category}
+                  onChange={(event) =>
+                    updateValue("category", event.target.value)
+                  }
                   aria-invalid={Boolean(state.errors?.category)}
                   placeholder="Creator tools"
                 />
@@ -155,7 +188,10 @@ export function AffiliateLinkForm({
                 <Input
                   id="network"
                   name="network"
-                  defaultValue={values.network}
+                  value={values.network}
+                  onChange={(event) =>
+                    updateValue("network", event.target.value)
+                  }
                   aria-invalid={Boolean(state.errors?.network)}
                   placeholder="Impact, PartnerStack"
                 />
@@ -166,7 +202,8 @@ export function AffiliateLinkForm({
                 <FieldLabel htmlFor="status">Status</FieldLabel>
                 <Select
                   name="status"
-                  defaultValue={values.status}
+                  value={values.status}
+                  onValueChange={(value) => updateValue("status", value)}
                 >
                   <SelectTrigger
                     id="status"
@@ -197,7 +234,10 @@ export function AffiliateLinkForm({
                 <Input
                   id="commissionType"
                   name="commissionType"
-                  defaultValue={values.commissionType}
+                  value={values.commissionType}
+                  onChange={(event) =>
+                    updateValue("commissionType", event.target.value)
+                  }
                   aria-invalid={Boolean(state.errors?.commissionType)}
                   placeholder="CPA, recurring"
                 />
@@ -212,7 +252,10 @@ export function AffiliateLinkForm({
                   id="commissionValue"
                   name="commissionValue"
                   inputMode="decimal"
-                  defaultValue={values.commissionValue}
+                  value={values.commissionValue}
+                  onChange={(event) =>
+                    updateValue("commissionValue", event.target.value)
+                  }
                   aria-invalid={Boolean(state.errors?.commissionValue)}
                   placeholder="25.00"
                 />
@@ -225,7 +268,8 @@ export function AffiliateLinkForm({
                   id="price"
                   name="price"
                   inputMode="decimal"
-                  defaultValue={values.price}
+                  value={values.price}
+                  onChange={(event) => updateValue("price", event.target.value)}
                   aria-invalid={Boolean(state.errors?.price)}
                   placeholder="99.00"
                 />
@@ -237,7 +281,10 @@ export function AffiliateLinkForm({
                 <Input
                   id="currency"
                   name="currency"
-                  defaultValue={values.currency}
+                  value={values.currency}
+                  onChange={(event) =>
+                    updateValue("currency", event.target.value)
+                  }
                   aria-invalid={Boolean(state.errors?.currency)}
                   placeholder="USD"
                 />
@@ -253,7 +300,10 @@ export function AffiliateLinkForm({
                 type="number"
                 min={0}
                 step={1}
-                defaultValue={values.sortOrder}
+                value={values.sortOrder}
+                onChange={(event) =>
+                  updateValue("sortOrder", event.target.value)
+                }
                 aria-invalid={Boolean(state.errors?.sortOrder)}
               />
               <FieldDescription>
