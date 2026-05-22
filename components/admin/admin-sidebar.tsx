@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronUp, MousePointerClick } from "lucide-react";
+import { ChevronUp, LogOut, MousePointerClick } from "lucide-react";
+import { SignOutButton } from "@clerk/nextjs";
 
 import {
   Sidebar,
@@ -154,6 +155,13 @@ export function AdminSidebar() {
                 <DropdownMenuItem asChild>
                   <Link href="/">View public page</Link>
                 </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <SignOutButton redirectUrl="/">
+                  <DropdownMenuItem variant="destructive" className="gap-2">
+                    <LogOut className="size-4" />
+                    Sign out
+                  </DropdownMenuItem>
+                </SignOutButton>
               </DropdownMenuContent>
             </DropdownMenu>
           </SidebarMenuItem>
