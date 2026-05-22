@@ -14,11 +14,16 @@ import {
   validateOnboardingForm,
   type OnboardingFormState,
 } from "@/lib/onboarding";
+import { isCompleteOnboardingIntent } from "@/lib/onboarding-submit";
 
 export async function completeOnboarding(
-  _state: OnboardingFormState,
+  state: OnboardingFormState,
   formData: FormData
 ): Promise<OnboardingFormState> {
+  if (!isCompleteOnboardingIntent(formData)) {
+    return state;
+  }
+
   const validation = validateOnboardingForm(formData);
 
   if (!validation.ok) {

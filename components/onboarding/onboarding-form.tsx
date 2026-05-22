@@ -32,6 +32,7 @@ export function OnboardingForm({ initialValues }: OnboardingFormProps) {
   >(completeOnboarding, { values: initialValues });
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [ignoredErrorSignature, setIgnoredErrorSignature] = useState("");
+  const [submitLocked, setSubmitLocked] = useState(false);
   const values = state.values;
   const errorSignature = state.errors ? JSON.stringify(state.errors) : "";
   const visibleStepIndex =
@@ -45,12 +46,23 @@ export function OnboardingForm({ initialValues }: OnboardingFormProps) {
 
   function goBack() {
     setIgnoredErrorSignature(errorSignature);
+    setSubmitLocked(false);
     setCurrentStepIndex(Math.max(visibleStepIndex - 1, 0));
   }
 
   function goNext() {
+    const nextStepIndex = Math.min(
+      visibleStepIndex + 1,
+      onboardingSteps.length - 1
+    );
+
     setIgnoredErrorSignature(errorSignature);
-    setCurrentStepIndex(Math.min(visibleStepIndex + 1, onboardingSteps.length - 1));
+    setCurrentStepIndex(nextStepIndex);
+
+    if (canSubmitOnboardingStep(nextStepIndex)) {
+      setSubmitLocked(true);
+      window.setTimeout(() => setSubmitLocked(false), 600);
+    }
   }
 
   function preventNonFinalSubmit(event: FormEvent<HTMLFormElement>) {
@@ -109,6 +121,7 @@ export function OnboardingForm({ initialValues }: OnboardingFormProps) {
         isFirstStep={isFirstStep}
         canSubmit={canSubmit}
         pending={pending}
+        submitLocked={submitLocked}
         submitAction={action}
         onBack={goBack}
         onNext={goNext}

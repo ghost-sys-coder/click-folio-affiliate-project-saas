@@ -1,11 +1,16 @@
 import { ArrowLeft, ArrowRight, BadgeCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import {
+  onboardingCompleteIntent,
+  onboardingIntentField,
+} from "@/lib/onboarding-submit";
 
 type OnboardingFormFooterProps = {
   isFirstStep: boolean;
   canSubmit: boolean;
   pending: boolean;
+  submitLocked: boolean;
   submitAction: (formData: FormData) => void;
   onBack: () => void;
   onNext: () => void;
@@ -15,6 +20,7 @@ export function OnboardingFormFooter({
   isFirstStep,
   canSubmit,
   pending,
+  submitLocked,
   submitAction,
   onBack,
   onNext,
@@ -37,16 +43,24 @@ export function OnboardingFormFooter({
           Back
         </Button>
         {canSubmit ? (
-          <Button
-            type="submit"
-            formAction={submitAction}
-            data-onboarding-submit="true"
-            disabled={pending}
-            className="h-10"
-          >
-            {pending ? "Creating profile..." : "Complete onboarding"}
-            <ArrowRight />
-          </Button>
+          <>
+            <input
+              type="hidden"
+              name={onboardingIntentField}
+              value={onboardingCompleteIntent}
+              disabled={submitLocked}
+            />
+            <Button
+              type="submit"
+              formAction={submitAction}
+              data-onboarding-submit="true"
+              disabled={pending || submitLocked}
+              className="h-10"
+            >
+              {pending ? "Creating profile..." : "Complete onboarding"}
+              <ArrowRight />
+            </Button>
+          </>
         ) : (
           <Button type="button" disabled={pending} className="h-10" onClick={onNext}>
             Continue
