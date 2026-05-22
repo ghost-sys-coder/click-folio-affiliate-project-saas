@@ -6,7 +6,10 @@ import { SignInButton, useUser } from '@clerk/nextjs';
 import { Button } from '../ui/button';
 
 const HomepageNavbar = () => {
-    const { isLoaded, isSignedIn } = useUser();
+    const { isLoaded, isSignedIn, user } = useUser();
+
+    if (!isLoaded) return null;
+    
     return (
         <header className="relative z-10 mx-auto flex max-w-7xl items-center justify-between px-6 py-6 lg:px-8">
             <Link href="/" className="flex items-center gap-2">
@@ -39,7 +42,7 @@ const HomepageNavbar = () => {
                     </Button>
                 )}
                 <Link
-                    href={isSignedIn ? "/dashboard" : "/sign-in"}
+                    href={isSignedIn ? "/admin" : "/sign-in"}
                     className="inline-flex items-center rounded-full bg-foreground px-5 py-2 text-sm font-semibold text-background transition hover:bg-foreground/90"
                 >
                     {isSignedIn ? "Go to Dashboard" : "Get Started"}
