@@ -79,6 +79,73 @@ export function parseAffiliateLinkJsonImport(
   }
 }
 
+export function parseAffiliateLinkCsvImport(
+  csvText: string,
+  fallbackValues = getDefaultAffiliateLinkValues()
+): AffiliateLinkImportResult {
+  if (!csvText.trim()) {
+    return {
+      ok: false,
+      message: "Paste CSV content or upload a .csv file first.",
+    };
+  }
+
+  const rows = parseCsvRows(csvText);
+
+  if (rows.length < 2) {
+    return {
+      ok: false,
+      message: "The CSV must include a header row and one affiliate link row.",
+    };
+  }
+
+  const [headers, firstRow] = rows;
+  const record: Record<string, unknown> = {};
+
+  headers.forEach((header, index) => {
+    const field = normalizeHeader(header);
+
+    if (field) {
+      record[field] = firstRow[index] ?? "";
+    }
+  });
+
+  return normalizeAffiliateLinkImportRecord(record, fallbackValues);
+}
+
+export async function parseAffiliateLinkExcelImport(
+  data: ArrayBuffer | Uint8Array,
+  fallbackValues = getDefaultAffiliateLinkValues()
+): Promise<AffiliateLinkImportResult> {
+  const xlsx = await import("xlsx");
+  const workbook = xlsx.read(data, { type: "array" });
+  const firstSheetName = workbook.SheetNames[0];
+
+  if (!firstSheetName) {
+    return {
+      ok: false,
+      message: "The workbook does not contain any sheets.",
+    };
+  }
+
+  const rows = xlsx.utils.sheet_to_json<Record<string, unknown>>(
+    workbook.Sheets[firstSheetName],
+    {
+      defval: "",
+    }
+  );
+
+  if (rows.length === 0) {
+    return {
+      ok: false,
+      message:
+        "The first worksheet must include headers and one affiliate link row.",
+    };
+  }
+
+  return normalizeAffiliateLinkImportRecord(rows[0], fallbackValues);
+}
+
 export function normalizeAffiliateLinkImportRecord(
   record: Record<string, unknown>,
   fallbackValues = getDefaultAffiliateLinkValues()
@@ -119,6 +186,15 @@ export function getSampleAffiliateLinkJsonText() {
   return JSON.stringify(sampleAffiliateLinkJson, null, 2);
 }
 
+export function getSampleAffiliateLinkCsvText() {
+  const headers = affiliateLinkImportFieldNames;
+  const values = headers.map((field) =>
+    formatCsvCell(sampleAffiliateLinkJson[field])
+  );
+
+  return `${headers.join(",")}\n${values.join(",")}\n`;
+}
+
 function normalizeFieldValue(
   field: keyof AffiliateLinkValues,
   value: string,
@@ -155,6 +231,75 @@ function normalizeStatus(value: string, fallback: AffiliateLinkStatus) {
   return affiliateLinkStatuses.includes(value as AffiliateLinkStatus)
     ? (value as AffiliateLinkStatus)
     : fallback;
+}
+
+function normalizeHeader(header: string) {
+  const normalized = header.trim();
+
+  return affiliateLinkImportFieldNames.find((field) => field === normalized);
+}
+
+function parseCsvRows(csvText: string) {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let cell = "";
+  let inQuotes = false;
+
+  for (let index = 0; index < csvText.length; index += 1) {
+    const character = csvText[index];
+    const nextCharacter = csvText[index + 1];
+
+    if (character === '"' && inQuotes && nextCharacter === '"') {
+      cell += '"';
+      index += 1;
+      continue;
+    }
+
+    if (character === '"') {
+      inQuotes = !inQuotes;
+      continue;
+    }
+
+    if (character === "," && !inQuotes) {
+      row.push(cell.trim());
+      cell = "";
+      continue;
+    }
+
+    if ((character === "\n" || character === "\r") && !inQuotes) {
+      if (character === "\r" && nextCharacter === "\n") {
+        index += 1;
+      }
+
+      row.push(cell.trim());
+
+      if (row.some((value) => value !== "")) {
+        rows.push(row);
+      }
+
+      row = [];
+      cell = "";
+      continue;
+    }
+
+    cell += character;
+  }
+
+  row.push(cell.trim());
+
+  if (row.some((value) => value !== "")) {
+    rows.push(row);
+  }
+
+  return rows;
+}
+
+function formatCsvCell(value: string) {
+  if (/[",\n\r]/.test(value)) {
+    return `"${value.replace(/"/g, '""')}"`;
+  }
+
+  return value;
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
