@@ -4,7 +4,11 @@ import { signalPurpleClerkAppearance } from '@/lib/themes'
 
 const SignUpPage = () => {
   return (
-    <SignUp appearance={signalPurpleClerkAppearance} />
+    <SignUp
+      appearance={signalPurpleClerkAppearance}
+      forceRedirectUrl="/onboarding"
+      fallbackRedirectUrl="/onboarding"
+    />
   )
 }
 

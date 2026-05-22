@@ -1,10 +1,28 @@
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
+
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { AdminThemeShell } from "@/components/admin/admin-theme";
 import { AdminThemeSwitcher } from "@/components/admin/admin-theme-switcher";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { getOnboardingStateByClerkUserId } from "@/db/profiles";
 
-const AdminDashboardLayout = ({ children }: { children: React.ReactNode }) => {
+export const dynamic = "force-dynamic";
+
+const AdminDashboardLayout = async ({ children }: { children: React.ReactNode }) => {
+  const { userId } = await auth();
+
+  if (!userId) {
+    redirect("/sign-in?redirect_url=/admin");
+  }
+
+  const onboardingState = await getOnboardingStateByClerkUserId(userId);
+
+  if (!onboardingState.profileId) {
+    redirect("/onboarding");
+  }
+
   return (
     <AdminThemeShell>
       <TooltipProvider>

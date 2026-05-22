@@ -17,6 +17,7 @@ export const usersTable = pgTable("users", {
 
 export type User = typeof usersTable.$inferSelect;
 
+// this is for the user onboarding flow
 export const profilesTable = pgTable("profiles", {
     id: uuid("id").primaryKey().defaultRandom(),
     userId: uuid("user_id").notNull().unique().references(() => usersTable.id),
