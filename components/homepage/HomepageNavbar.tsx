@@ -6,7 +6,7 @@ import { SignInButton, useUser } from '@clerk/nextjs';
 import { Button } from '../ui/button';
 
 const HomepageNavbar = () => {
-    const { isLoaded, isSignedIn, user } = useUser();
+    const { isLoaded, isSignedIn } = useUser();
 
     if (!isLoaded) return null;
     
