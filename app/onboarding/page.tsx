@@ -3,9 +3,9 @@ import { redirect } from "next/navigation";
 import { BadgeCheck, LineChart, Link2, ShieldCheck } from "lucide-react";
 
 import { OnboardingForm } from "@/components/onboarding/onboarding-form";
+import { OnboardingThemeShell } from "@/components/onboarding/onboarding-theme-shell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getOnboardingStateByClerkUserId } from "@/db/profiles";
-import { appThemes } from "@/lib/themes";
 import { getDefaultOnboardingValues } from "@/lib/onboarding";
 
 export const dynamic = "force-dynamic";
@@ -31,11 +31,8 @@ export default async function OnboardingPage() {
     clerkUser?.username || clerkUser?.primaryEmailAddress?.emailAddress.split("@")[0] || "";
 
   return (
-    <main
-      data-theme={appThemes.growthMint}
-      className="min-h-svh bg-background text-foreground"
-    >
-      <div className="mx-auto grid min-h-svh w-full max-w-6xl gap-8 px-4 py-8 md:grid-cols-[0.9fr_1.1fr] md:px-8 lg:py-12">
+    <OnboardingThemeShell>
+      <div className="mx-auto grid min-h-[calc(100svh-4rem)] w-full max-w-6xl gap-8 px-4 py-6 md:grid-cols-[0.9fr_1.1fr] md:px-8 lg:py-10">
         <section className="flex flex-col justify-between gap-8">
           <div className="space-y-5">
             <div className="inline-flex items-center gap-2 rounded-full border bg-surface px-3 py-1 text-sm text-muted-foreground">
@@ -95,10 +92,14 @@ export default async function OnboardingPage() {
 
         <section className="self-center">
           <OnboardingForm
-            initialValues={getDefaultOnboardingValues(displayName, usernameSeed)}
+            initialValues={getDefaultOnboardingValues(
+              displayName,
+              usernameSeed,
+              clerkUser?.imageUrl || ""
+            )}
           />
         </section>
       </div>
-    </main>
+    </OnboardingThemeShell>
   );
 }

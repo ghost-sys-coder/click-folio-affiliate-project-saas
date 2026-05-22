@@ -27,9 +27,14 @@ export const profilesTable = pgTable("profiles", {
     niche: text("niche"),
     avatarUrl: text("avatar_url"),
     coverImageUrl: text("cover_image_url"),
+    targetAudience: text("target_audience").notNull().default("Affiliate Marketers"),
+    primaryPlatform: text("primary_platform").notNull().default("instagram"),
+    contentTone: text("content_tone").notNull().default("direct"),
+    primaryGoal: text("primary_goal").notNull().default("organize my links"),
+    defaultButtonLabel: text("default_button_label").default("View Deal"),
     theme: text("theme").default("default"),
-    disclosureText: text("disclosure_text"),
-    isPublished: boolean("is_published").default(true),
+    disclosureText: text("disclosure_text").notNull().default("Some links on this page may earn me a commission at no extra cost to you."),
+    isPublished: boolean("is_published").notNull().default(true),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow()
 });

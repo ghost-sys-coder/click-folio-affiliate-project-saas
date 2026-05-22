@@ -62,8 +62,13 @@ export async function createUserProfile(input: {
   niche: string;
   avatarUrl: string | null;
   coverImageUrl: string | null;
+  targetAudience: string;
+  primaryPlatform: string;
+  contentTone: string;
+  primaryGoal: string;
+  defaultButtonLabel: string;
   theme: AppTheme;
-  disclosureText: string | null;
+  disclosureText: string;
 }) {
   const [profile] = await getDb()
     .insert(profilesTable)
@@ -75,6 +80,11 @@ export async function createUserProfile(input: {
       niche: input.niche,
       avatarUrl: input.avatarUrl,
       coverImageUrl: input.coverImageUrl,
+      targetAudience: input.targetAudience,
+      primaryPlatform: input.primaryPlatform,
+      contentTone: input.contentTone,
+      primaryGoal: input.primaryGoal,
+      defaultButtonLabel: input.defaultButtonLabel,
       theme: input.theme,
       disclosureText: input.disclosureText,
       isPublished: true,

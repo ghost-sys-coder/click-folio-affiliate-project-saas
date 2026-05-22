@@ -1,8 +1,8 @@
 "use server";
 
 import { currentUser } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 import { upsertClerkUser } from "@/db/clerk-users";
 import {
@@ -68,10 +68,15 @@ export async function completeOnboarding(
       displayName: validation.data.displayName,
       bio: validation.data.bio || null,
       niche: validation.data.niche,
-      avatarUrl: clerkUser.imageUrl || null,
-      coverImageUrl: null,
+      avatarUrl: validation.data.avatarUrl || clerkUser.imageUrl || null,
+      coverImageUrl: validation.data.coverImageUrl || null,
+      targetAudience: validation.data.targetAudience,
+      primaryPlatform: validation.data.primaryPlatform,
+      contentTone: validation.data.contentTone,
+      primaryGoal: validation.data.primaryGoal,
+      defaultButtonLabel: validation.data.defaultButtonLabel,
       theme: validation.data.theme,
-      disclosureText: validation.data.disclosureText || null,
+      disclosureText: validation.data.disclosureText,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "";

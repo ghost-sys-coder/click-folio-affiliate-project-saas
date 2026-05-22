@@ -1,4 +1,4 @@
-import { appThemes, type AppTheme } from "@/lib/themes";
+import { appThemes, type AppTheme } from "./themes.ts";
 
 export const onboardingNiches = [
   { value: "creator-tools", label: "Creator tools" },
@@ -16,6 +16,33 @@ export const onboardingProfileThemes = [
   { value: appThemes.signalPurple, label: "Signal Purple" },
 ] as const;
 
+export const onboardingPlatforms = [
+  { value: "instagram", label: "Instagram" },
+  { value: "tiktok", label: "TikTok" },
+  { value: "youtube", label: "YouTube" },
+  { value: "x", label: "X / Twitter" },
+  { value: "linkedin", label: "LinkedIn" },
+  { value: "newsletter", label: "Newsletter" },
+  { value: "blog", label: "Blog or SEO" },
+  { value: "other", label: "Other" },
+] as const;
+
+export const onboardingContentTones = [
+  { value: "direct", label: "Direct" },
+  { value: "expert", label: "Expert" },
+  { value: "friendly", label: "Friendly" },
+  { value: "editorial", label: "Editorial" },
+  { value: "premium", label: "Premium" },
+] as const;
+
+export const onboardingPrimaryGoals = [
+  { value: "organize-links", label: "Organize my links" },
+  { value: "grow-revenue", label: "Grow affiliate revenue" },
+  { value: "build-audience", label: "Build an audience" },
+  { value: "track-performance", label: "Track performance" },
+  { value: "launch-campaigns", label: "Launch campaigns" },
+] as const;
+
 export type OnboardingValues = {
   username: string;
   displayName: string;
@@ -23,6 +50,13 @@ export type OnboardingValues = {
   theme: AppTheme;
   bio: string;
   disclosureText: string;
+  avatarUrl: string;
+  coverImageUrl: string;
+  targetAudience: string;
+  primaryPlatform: string;
+  contentTone: string;
+  primaryGoal: string;
+  defaultButtonLabel: string;
 };
 
 export type OnboardingErrors = Partial<Record<keyof OnboardingValues, string>>;
@@ -38,12 +72,13 @@ export type OnboardingValidationResult =
   | { ok: false; errors: OnboardingErrors; values: OnboardingValues };
 
 const usernamePattern = /^[a-z0-9][a-z0-9_-]{2,29}$/;
-const defaultDisclosure =
+export const defaultDisclosure =
   "Some links on this page may earn me a commission at no extra cost to you.";
 
 export function getDefaultOnboardingValues(
   displayName = "",
-  usernameSeed = ""
+  usernameSeed = "",
+  avatarUrl = ""
 ): OnboardingValues {
   return {
     username: normalizeUsername(usernameSeed),
@@ -52,6 +87,13 @@ export function getDefaultOnboardingValues(
     theme: appThemes.growthMint,
     bio: "",
     disclosureText: defaultDisclosure,
+    avatarUrl,
+    coverImageUrl: "",
+    targetAudience: "Affiliate marketers",
+    primaryPlatform: "instagram",
+    contentTone: "direct",
+    primaryGoal: "organize-links",
+    defaultButtonLabel: "View Deal",
   };
 }
 
@@ -64,6 +106,14 @@ export function validateOnboardingForm(formData: FormData) {
     bio: readFormValue(formData, "bio"),
     disclosureText:
       readFormValue(formData, "disclosureText") || defaultDisclosure,
+    avatarUrl: readFormValue(formData, "avatarUrl"),
+    coverImageUrl: readFormValue(formData, "coverImageUrl"),
+    targetAudience: readFormValue(formData, "targetAudience"),
+    primaryPlatform: readFormValue(formData, "primaryPlatform"),
+    contentTone: readFormValue(formData, "contentTone"),
+    primaryGoal: readFormValue(formData, "primaryGoal"),
+    defaultButtonLabel:
+      readFormValue(formData, "defaultButtonLabel") || "View Deal",
   };
   const errors: OnboardingErrors = {};
 
@@ -82,6 +132,46 @@ export function validateOnboardingForm(formData: FormData) {
 
   if (values.bio.length > 180) {
     errors.bio = "Keep your bio under 180 characters.";
+  }
+
+  if (values.avatarUrl && !isValidHttpUrl(values.avatarUrl)) {
+    errors.avatarUrl = "Upload a valid image URL for your avatar.";
+  }
+
+  if (values.coverImageUrl && !isValidHttpUrl(values.coverImageUrl)) {
+    errors.coverImageUrl = "Upload a valid image URL for your cover image.";
+  }
+
+  if (
+    values.targetAudience.length < 2 ||
+    values.targetAudience.length > 90
+  ) {
+    errors.targetAudience = "Describe your audience in 2-90 characters.";
+  }
+
+  if (
+    !onboardingPlatforms.some(
+      (platform) => platform.value === values.primaryPlatform
+    )
+  ) {
+    errors.primaryPlatform = "Choose your primary platform.";
+  }
+
+  if (
+    !onboardingContentTones.some((tone) => tone.value === values.contentTone)
+  ) {
+    errors.contentTone = "Choose the content tone that fits your brand.";
+  }
+
+  if (!onboardingPrimaryGoals.some((goal) => goal.value === values.primaryGoal)) {
+    errors.primaryGoal = "Choose your primary onboarding goal.";
+  }
+
+  if (
+    values.defaultButtonLabel.length < 2 ||
+    values.defaultButtonLabel.length > 32
+  ) {
+    errors.defaultButtonLabel = "Keep the default button label within 32 characters.";
   }
 
   if (values.disclosureText.length > 220) {
@@ -115,4 +205,13 @@ function normalizeTheme(value: string): AppTheme {
   }
 
   return appThemes.growthMint;
+}
+
+function isValidHttpUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" || url.protocol === "http:";
+  } catch {
+    return false;
+  }
 }
