@@ -1,4 +1,4 @@
-import { integer, text, boolean, pgTable, timestamp, uuid, numeric, json } from "drizzle-orm/pg-core";
+import { integer, text, boolean, pgTable, timestamp, uuid, numeric, json, pgEnum } from "drizzle-orm/pg-core";
 
 // create user table
 export const usersTable = pgTable("users", {
@@ -41,8 +41,14 @@ export const profilesTable = pgTable("profiles", {
 
 export type Profile = typeof profilesTable.$inferSelect;
 
+// link status enum
+export const affiliateLinkStatusEnum = pgEnum("link_status", [
+    "active",
+    "inactive",
+    "archive",
+]);
 
-export const affiliatesLinksTable = pgTable("affiliates_links", {
+export const affiliateLinksTable = pgTable("affiliate_links", {
     id: uuid("id").primaryKey().defaultRandom(),
     profileId: uuid("profile_id").notNull().references(() => profilesTable.id),
     userId: uuid("user_id").notNull().references(() => usersTable.id),
@@ -54,22 +60,22 @@ export const affiliatesLinksTable = pgTable("affiliates_links", {
     category: text("category"),
     network: text("network"),
     commissionType: text("commission_type"),
-    commisionValue: numeric("commission_value", { precision: 10, scale: 2 }),
+    commissionValue: numeric("commission_value", { precision: 10, scale: 2 }),
     price: numeric("price", { precision: 10, scale: 2 }),
-    currency: text("currency").default("USD"),
-    buttonLabel: text("button_label").default("Buy Now"),
-    status: text("status").default("active"),
-    sortOrder: integer("sort_order").default(0),
+    currency: text("currency").notNull().default("USD"),
+    buttonLabel: text("button_label").notNull().default("Buy Now"),
+    status: affiliateLinkStatusEnum("status").notNull().default("active"),
+    sortOrder: integer("sort_order").notNull().default(0),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow()
 });
 
-export type AffiliateLinks = typeof affiliatesLinksTable.$inferSelect;
+export type AffiliateLink = typeof affiliateLinksTable.$inferSelect;
 
 // after MVP we can add tables for analytics, link clicks, etc.
 export const linkClicksTable = pgTable("link_clicks", {
     id: uuid("id").primaryKey().defaultRandom(),
-    affiliateLinkId: uuid("affiliate_link_id").notNull().references(() => affiliatesLinksTable.id),
+    affiliateLinkId: uuid("affiliate_link_id").notNull().references(() => affiliateLinksTable.id),
     profileId: uuid("profile_id").notNull().references(() => profilesTable.id),
     userId: uuid("user_id").references(() => usersTable.id),
     referer: text("referer"),
@@ -128,7 +134,7 @@ export const aiContentTable = pgTable("ai_content", {
     profileId: uuid("profile_id").notNull().references(() => profilesTable.id),
     userId: uuid("user_id").notNull().references(() => usersTable.id),
     campaignId: uuid("campaign_id").references(() => campaignsTable.id),
-    linkId: uuid("link_id").references(() => affiliatesLinksTable.id),
+    linkId: uuid("link_id").references(() => affiliateLinksTable.id),
     platform: text("platform").notNull(), // e.g. "instagram", "facebook", "twitter", etc.
     promptInput: json("prompt_input"), // store the input parameters used to generate the content for future reference
     generatedContent: text("generated_content").notNull(), // the actual AI generated content

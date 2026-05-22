@@ -34,7 +34,6 @@ export const adminNavSections: AdminNavSection[] = [
         title: "Affiliate Links",
         href: "/admin/links",
         icon: Link2,
-        badge: "12",
       },
       {
         title: "Analytics",
