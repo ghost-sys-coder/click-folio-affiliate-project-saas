@@ -15,7 +15,7 @@ export default async function AdminSettingsPage() {
 
   const user = await getUserByClerkUserId(clerkUserId);
 
-  if (!user) {
+  if (!user || user.isDeleted) {
     redirect("/onboarding");
   }
 

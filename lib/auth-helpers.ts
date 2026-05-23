@@ -15,9 +15,9 @@ export async function requireAuthenticatedUser() {
 
   const user = await getUserByClerkUserId(clerkUserId);
 
-  if (!user) {
-    // This handles the case where Clerk auth exists but local user record doesn't
-    // which shouldn't happen after onboarding, but we handle it safely.
+  if (!user || user.isDeleted) {
+    // This handles the case where Clerk auth exists but local user record doesn't,
+    // or if the user has been soft-deleted. Redirect to onboarding to re-create/re-activate.
     redirect("/onboarding");
   }
 
