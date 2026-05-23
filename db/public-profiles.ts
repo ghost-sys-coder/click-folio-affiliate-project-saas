@@ -15,6 +15,7 @@ export async function getPublicProfileByUsername(username: string) {
   const [profile] = await getDb()
     .select({
       id: profilesTable.id,
+      userId: profilesTable.userId,
       username: profilesTable.username,
       displayName: profilesTable.displayName,
       bio: profilesTable.bio,

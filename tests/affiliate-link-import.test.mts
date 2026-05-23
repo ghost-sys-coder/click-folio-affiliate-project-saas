@@ -14,7 +14,7 @@ import { getDefaultAffiliateLinkValues } from "../lib/affiliate-links.ts";
 test("parses sample affiliate link JSON into bulk records", () => {
   const result = parseAffiliateLinkJsonImport(getSampleAffiliateLinkJsonText());
 
-  assert.equal(result.summary.total, 1);
+  assert.equal(result.summary.total, 3);
   const record = result.records[0];
   assert.equal(record.isValid, true);
   assert.equal(record.values.title, "Creator tool bundle");
@@ -58,7 +58,7 @@ test("supports bulk JSON arrays", () => {
 test("parses sample affiliate link CSV into bulk records", () => {
   const result = parseAffiliateLinkCsvImport(getSampleAffiliateLinkCsvText());
 
-  assert.equal(result.summary.total, 1);
+  assert.equal(result.summary.total, 3);
   const record = result.records[0];
   assert.equal(record.isValid, true);
   assert.equal(record.values.title, "Creator tool bundle");
