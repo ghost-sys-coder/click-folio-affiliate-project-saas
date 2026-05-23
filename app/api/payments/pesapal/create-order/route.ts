@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { pesapal, ipn } from "@/utils/pesapal";
+import { pesapal } from "@/utils/pesapal";
 
 export async function POST(req: NextRequest) {
   try {
@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
       currency: "UGX",
       description: "Test order",
       callback_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/payments/pesapal/callback`,
-      notification_id: ipn.ipn_id,
+      notification_id: `notif-${Date.now()}`,
       billing_address: {
         email_address: "franktamalejr@gmail.com",
         phone_number: "0700000000",

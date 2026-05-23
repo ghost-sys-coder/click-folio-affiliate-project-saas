@@ -6,7 +6,3 @@ export const pesapal = new Pesapal({
     environment: "sandbox"
 });
 
-export const ipn = await pesapal.ipn.registerIPNUrl({
-    url: "https://clickfolio.veilcode.studio" + "/ipn",
-    ipn_notification_type: "POST"
-});
