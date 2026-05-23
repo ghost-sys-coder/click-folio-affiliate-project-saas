@@ -1,30 +1,38 @@
-import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import {
   createGeneratedPostForUser,
   getContentStudioAffiliateLinkForUser,
 } from "@/db/generated-posts";
-import { getProfileByUserId, getUserByClerkUserId } from "@/db/profiles";
+import { getProfileByUserId } from "@/db/profiles";
 import {
   contentStudioRequestSchema,
   generateContentStudioOutput,
   stringifyGeneratedContent,
 } from "@/lib/content-studio";
+import { getCurrentUserPlan } from "@/lib/subscriptions";
+import { canGenerateContent } from "@/lib/plans";
+import { getMonthlyContentGenerationCount, recordUsageEvent } from "@/lib/usage";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
-  const { userId: clerkUserId } = await auth();
+  const userPlan = await getCurrentUserPlan();
 
-  if (!clerkUserId) {
-    return NextResponse.json({ error: "Authentication required." }, { status: 401 });
+  if (userPlan.status === "expired") {
+    return NextResponse.json(
+      { error: "Your trial has expired. Upgrade to continue generating content." },
+      { status: 403 }
+    );
   }
 
-  const user = await getUserByClerkUserId(clerkUserId);
+  const monthlyCount = await getMonthlyContentGenerationCount(userPlan.userId);
 
-  if (!user || user.isDeleted) {
-    return NextResponse.json({ error: "Workspace unavailable." }, { status: 403 });
+  if (!canGenerateContent(monthlyCount, userPlan.plan)) {
+    return NextResponse.json(
+      { error: `You have reached the monthly limit of ${userPlan.limits.maxContentGenerations} generations for your ${userPlan.limits.label} plan. Upgrade for more.` },
+      { status: 403 }
+    );
   }
 
   const body = await request.json().catch(() => null);
@@ -41,7 +49,7 @@ export async function POST(request: Request) {
   }
 
   const link = await getContentStudioAffiliateLinkForUser(
-    user.id,
+    userPlan.userId,
     validation.data.linkId
   );
 
@@ -52,7 +60,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const profile = await getProfileByUserId(user.id);
+  const profile = await getProfileByUserId(userPlan.userId);
 
   if (!profile) {
     return NextResponse.json(
@@ -78,10 +86,15 @@ export async function POST(request: Request) {
     });
     const generatedText = stringifyGeneratedContent(result.output);
     const savedPost = await createGeneratedPostForUser({
-      userId: user.id,
+      userId: userPlan.userId,
       request: validation.data,
       outputJson: result.output,
       generatedText,
+    });
+
+    await recordUsageEvent(userPlan.userId, "content_generation", {
+        provider: result.provider,
+        linkId: validation.data.linkId
     });
 
     return NextResponse.json({

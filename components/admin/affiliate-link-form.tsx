@@ -56,6 +56,7 @@ export function AffiliateLinkForm({
 
   // Update local values if initialValues change (e.g. from an import)
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setValues(initialValues);
   }, [initialValues]);
 

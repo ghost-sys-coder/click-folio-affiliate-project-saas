@@ -26,12 +26,14 @@ type PublicProfilePageProps = {
   links: PublicAffiliateLink[];
   profile: PublishedProfile;
   trackingParams?: TrackingSearchParams;
+  removeBranding?: boolean;
 };
 
 export function PublicProfilePage({
   links,
   profile,
   trackingParams,
+  removeBranding = false,
 }: PublicProfilePageProps) {
   const theme = normalizeAppTheme(profile.theme);
   const niche = formatLabel(profile.niche);
@@ -144,6 +146,7 @@ export function PublicProfilePage({
         <AffiliateDisclosure
           disclosureText={profile.disclosureText}
           theme={theme}
+          removeBranding={removeBranding}
         />
       </div>
     </main>
@@ -276,9 +279,11 @@ function EmptyPublicLinksState({ displayName }: { displayName: string }) {
 function AffiliateDisclosure({
   disclosureText,
   theme,
+  removeBranding,
 }: {
   disclosureText: string;
   theme: string;
+  removeBranding: boolean;
 }) {
   return (
     <footer className="grid gap-3 rounded-2xl border border-border bg-surface px-5 py-4 text-sm leading-6 text-muted-foreground sm:grid-cols-[1fr_auto] sm:items-center">
@@ -286,13 +291,15 @@ function AffiliateDisclosure({
         <p className="font-medium text-foreground">Affiliate disclosure</p>
         <p>{disclosureText}</p>
       </div>
-      <div className="inline-flex items-center gap-2 text-xs text-muted-foreground sm:justify-self-end">
-        <ExternalLink className="size-3.5" />
-        Powered by Clickfolio
-        <span className="sr-only">
-          using the {theme === appThemes.growthMint ? "Growth Mint" : "Signal Purple"} theme
-        </span>
-      </div>
+      {!removeBranding && (
+        <div className="inline-flex items-center gap-2 text-xs text-muted-foreground sm:justify-self-end">
+          <ExternalLink className="size-3.5" />
+          Powered by Clickfolio
+          <span className="sr-only">
+            using the {theme === appThemes.growthMint ? "Growth Mint" : "Signal Purple"} theme
+          </span>
+        </div>
+      )}
     </footer>
   );
 }

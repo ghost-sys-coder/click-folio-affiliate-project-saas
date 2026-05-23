@@ -1,9 +1,16 @@
-import React from 'react'
+import { BillingDashboard } from "@/components/admin/billing-dashboard";
+import { getCurrentUserPlan } from "@/lib/subscriptions";
+import { getUsageSummary } from "@/lib/usage";
 
-const BillingPage = () => {
+export const dynamic = "force-dynamic";
+
+export default async function AdminBillingPage() {
+  const userPlan = await getCurrentUserPlan();
+  const usage = await getUsageSummary(userPlan.userId);
+
   return (
-    <div>BillingPage</div>
-  )
+    <div className="mx-auto max-w-6xl">
+      <BillingDashboard userPlan={userPlan} usage={usage} />
+    </div>
+  );
 }
-
-export default BillingPage

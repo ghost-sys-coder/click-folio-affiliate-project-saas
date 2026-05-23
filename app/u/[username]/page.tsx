@@ -7,6 +7,8 @@ import {
   getActiveAffiliateLinksByProfileId,
   getPublicProfileByUsername,
 } from "@/db/public-profiles";
+import { getSubscriptionByUserId } from "@/db/subscriptions";
+import { getPlanLimits, type PlanKey } from "@/lib/plans";
 
 const getCachedPublicProfileByUsername = cache(getPublicProfileByUsername);
 
@@ -81,12 +83,16 @@ export default async function UserPublicProfilePage({
   }
 
   const links = await getActiveAffiliateLinksByProfileId(profile.id);
+  const subscription = await getSubscriptionByUserId(profile.userId);
+  const planKey = (subscription?.plan || "trial") as PlanKey;
+  const limits = getPlanLimits(planKey);
 
   return (
     <PublicProfilePage
       profile={profile}
       links={links}
       trackingParams={resolvedSearchParams}
+      removeBranding={limits.removeBranding}
     />
   );
 }

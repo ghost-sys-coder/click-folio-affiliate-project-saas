@@ -1,10 +1,10 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
-import { Check, Loader2, Save } from "lucide-react";
+import { Loader2, Save } from "lucide-react";
 import { toast } from "sonner";
 
-import { updateProfile, type ProfileUpdateState } from "@/actions/profile";
+import { updateProfile } from "@/actions/profile";
 import { Button } from "@/components/ui/button";
 import {
   Card,

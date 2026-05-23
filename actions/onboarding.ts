@@ -10,6 +10,7 @@ import {
   getProfileByUserId,
   getUserByClerkUserId,
 } from "@/db/profiles";
+import { createTrialSubscription } from "@/db/subscriptions";
 import {
   validateOnboardingForm,
   type OnboardingFormState,
@@ -83,6 +84,9 @@ export async function completeOnboarding(
       theme: validation.data.theme,
       disclosureText: validation.data.disclosureText,
     });
+
+    // Create trial subscription
+    await createTrialSubscription(appUser.id);
   } catch (error) {
     const message = error instanceof Error ? error.message : "";
 

@@ -1,14 +1,13 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 
 import { getDb } from "@/db/drizzle";
 import { profilesTable } from "@/db/schema";
 import { getProfileByUserId, getUserByClerkUserId } from "@/db/profiles";
 import { validateOnboardingForm } from "@/lib/onboarding";
+import { getCurrentUserPlan } from "@/lib/subscriptions";
 
 export type ProfileUpdateState = {
   errors?: Record<string, string>;
@@ -29,13 +28,23 @@ export async function updateProfile(
     };
   }
 
-  const { userId: clerkUserId } = await auth();
+  const userPlan = await getCurrentUserPlan();
 
-  if (!clerkUserId) {
-    redirect("/sign-in?redirect_url=/admin/settings");
+  if (userPlan.status === "expired") {
+    return { message: "Your trial has expired. Upgrade to continue updating your profile." };
   }
 
-  const user = await getUserByClerkUserId(clerkUserId);
+  // Enforce theme limits
+  if (!userPlan.limits.customThemes && validation.data.theme !== "growth-mint") {
+      return {
+          message: `The ${validation.data.theme} theme is only available on premium plans. Upgrade to use custom themes.`,
+          errors: {
+              theme: "Custom themes are a premium feature."
+          }
+      };
+  }
+
+  const user = await getUserByClerkUserId(userPlan.userId);
 
   if (!user) {
     return { message: "User not found." };
