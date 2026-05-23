@@ -18,7 +18,7 @@ const plans = [
   },
   {
     name: "Pro",
-    price: "$15",
+    price: "$29",
     description: "For creators promoting consistently.",
     features: [
       "Unlimited affiliate links",
@@ -33,7 +33,7 @@ const plans = [
   },
   {
     name: "Creator Plus",
-    price: "$29",
+    price: "$49",
     description: "For serious affiliate marketers.",
     features: [
       "Everything in Pro",
