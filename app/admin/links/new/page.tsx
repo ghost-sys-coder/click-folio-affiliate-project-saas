@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
 import { createAffiliateLink } from "@/actions/affiliate-links";
-import { AffiliateLinkForm } from "@/components/admin/affiliate-link-form";
+import { AffiliateLinkImportHandler } from "@/components/admin/affiliate-link-import-handler";
 import { getAffiliateLinkWorkspaceByClerkUserId } from "@/db/affiliate-links";
 import { getDefaultAffiliateLinkValues } from "@/lib/affiliate-links";
 
@@ -28,17 +28,14 @@ export default async function NewAffiliateLinkPage() {
           New affiliate link
         </h1>
         <p className="text-sm text-muted-foreground">
-          Add the offer details you want to manage from this workspace.
+          Add one or more offer links to your workspace.
         </p>
       </div>
-      <AffiliateLinkForm
-        action={createAffiliateLink}
-        enableJsonImport
+      <AffiliateLinkImportHandler
+        createAction={createAffiliateLink}
         initialValues={getDefaultAffiliateLinkValues(
           workspace.defaultButtonLabel
         )}
-        submitLabel="Create link"
-        title="Link details"
       />
     </div>
   );

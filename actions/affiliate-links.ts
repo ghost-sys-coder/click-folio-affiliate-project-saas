@@ -7,6 +7,7 @@ import { z } from "zod";
 
 import {
   createAffiliateLinkForWorkspace,
+  createBulkAffiliateLinksForWorkspace,
   deleteAffiliateLinkForWorkspace,
   getAffiliateLinkWorkspaceByClerkUserId,
   setAffiliateLinkStatusForWorkspace,
@@ -17,7 +18,9 @@ import {
   affiliateLinkStatuses,
   getAffiliateLinkValuesFromFormData,
   validateAffiliateLinkForm,
+  validateBulkAffiliateLinks,
   type AffiliateLinkFormState,
+  type AffiliateLinkValues,
 } from "@/lib/affiliate-links";
 
 const linkStatusUpdateSchema = affiliateLinkIdSchema.extend({
@@ -54,6 +57,28 @@ export async function createAffiliateLink(
 
   revalidatePath("/admin/links");
   redirect("/admin/links");
+}
+
+export async function createBulkAffiliateLinks(links: AffiliateLinkValues[]) {
+  const workspace = await requireAffiliateLinkWorkspace();
+  const validation = validateBulkAffiliateLinks(links);
+
+  if (!validation.allValid) {
+    throw new Error("Some links are invalid. Review the preview and try again.");
+  }
+
+  try {
+    await createBulkAffiliateLinksForWorkspace({
+      userId: workspace.userId,
+      profileId: workspace.profileId,
+      data: validation.validData,
+    });
+  } catch {
+    throw new Error("We could not create these affiliate links. Please try again.");
+  }
+
+  revalidatePath("/admin/links");
+  redirect(`/admin/links?bulkImport=success&count=${links.length}`);
 }
 
 export async function updateAffiliateLink(

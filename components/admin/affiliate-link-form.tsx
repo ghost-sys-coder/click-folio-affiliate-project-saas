@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { ExternalLink, Save } from "lucide-react";
 
-import { AffiliateLinkDataImport } from "@/components/admin/affiliate-link-data-import";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -45,7 +44,6 @@ type AffiliateLinkFormProps = {
 
 export function AffiliateLinkForm({
   action,
-  enableJsonImport = false,
   initialValues,
   submitLabel,
   title,
@@ -54,6 +52,11 @@ export function AffiliateLinkForm({
     values: initialValues,
   });
   const [values, setValues] = useState(initialValues);
+
+  // Update local values if initialValues change (e.g. from an import)
+  useEffect(() => {
+    setValues(initialValues);
+  }, [initialValues]);
 
   function updateValue(field: keyof AffiliateLinkValues, value: string) {
     setValues((currentValues) => ({
@@ -64,13 +67,6 @@ export function AffiliateLinkForm({
 
   return (
     <form action={formAction} className="grid gap-4">
-      {enableJsonImport ? (
-        <AffiliateLinkDataImport
-          currentValues={values}
-          onImport={setValues}
-        />
-      ) : null}
-
       <Card className="border-border/70">
         <CardHeader className="border-b border-border/70">
           <CardTitle>{title}</CardTitle>

@@ -1,6 +1,6 @@
 # Clickfolio Project State
 
-Last updated: May 22, 2026
+Last updated: May 23, 2026
 
 ## Stack
 
@@ -198,32 +198,39 @@ The delete flow now requires confirmation:
 
 ## Import Support
 
-The create link page supports importing one affiliate link into the form.
+The create link page supports both single-form imports and bulk-import workflows with preview.
 
 Supported formats:
 
-- JSON paste
+- JSON paste (object or array)
 - JSON upload
-- CSV paste
+- CSV paste (single or multiple rows)
 - CSV upload
-- Excel upload: `.xlsx` and `.xls`
+- Excel upload: `.xlsx` and `.xls` (all rows from the first worksheet)
 
 Sample downloads:
 
-- JSON sample
-- CSV sample
-- Excel sample
+- JSON sample (multi-record array)
+- CSV sample (multi-row)
+- Excel sample (multi-row workbook)
 
 Implementation details:
 
-- UI component: `components/admin/affiliate-link-data-import.tsx`
+- UI components: `components/admin/affiliate-link-data-import.tsx`, `components/admin/affiliate-link-bulk-preview.tsx`, `components/admin/affiliate-link-import-handler.tsx`
 - Shared parser/normalizer: `lib/affiliate-link-import.ts`
 - JSON, CSV, and Excel all normalize into the same `AffiliateLinkValues` shape.
-- Excel import reads the first row from the first worksheet.
-- CSV import reads the first data row after the header row.
-- Bulk import is not implemented yet. The current import fills the single-link creation form.
+- Single valid record imports fill the manual creation form.
+- Multi-record imports trigger the **Bulk Preview** mode.
+- The Bulk Preview table validates each row, highlights errors, and allows individual row removal.
+- Bulk creation is executed via a protected server action using batch database insertion.
+- Success feedback on `/admin/links` confirms the number of links imported.
 
-This structure is prepared for future bulk CSV/Excel imports because source parsers map into the same record normalization layer.
+Important files:
+
+- Parser: `lib/affiliate-link-import.ts`
+- Server action: `actions/affiliate-links.ts`
+- Bulk Preview UI: `components/admin/affiliate-link-bulk-preview.tsx`
+- Batch DB helper: `db/affiliate-links.ts`
 
 ## Validation
 
@@ -239,7 +246,7 @@ Rules include:
 - Numeric money fields allow positive values with up to 2 decimals.
 - Currency is normalized to uppercase and must be 3 characters.
 
-Server actions validate all form input before database writes.
+Server actions validate all form input before database writes. Bulk validation happens both on the client (for preview) and on the server (before insertion).
 
 ## Security Model
 
@@ -251,6 +258,7 @@ Important rules currently enforced:
 - Server actions resolve the current Clerk user to the local `users` and `profiles` records.
 - Client-supplied `userId` is never trusted.
 - All affiliate link mutations use the local `userId` resolved on the server.
+- Batch inserts and bulk creation server actions are protected and scoped to the user's workspace.
 - Updates, status changes, archives, and deletes include `affiliate_links.userId` in the `WHERE` clause.
 - Invalid link IDs and invalid statuses are rejected before database mutation.
 - Users without a profile are redirected to onboarding.
@@ -269,6 +277,8 @@ Admin-specific:
 
 - `components/admin/affiliate-link-form.tsx`
 - `components/admin/affiliate-link-data-import.tsx`
+- `components/admin/affiliate-link-bulk-preview.tsx`
+- `components/admin/affiliate-link-import-handler.tsx`
 
 UI primitives added or used:
 
@@ -336,27 +346,19 @@ Important note:
 The following are intentionally not implemented yet:
 
 - AI content generation.
-- Bulk import that creates multiple links in one action.
-- Import preview table for multiple rows.
 - CSV/Excel export.
 - Analytics dashboard UI.
 
 ## Recommended Next Steps
 
 1. Add or verify migration files for the current Drizzle schema and apply them to the active database.
-2. Add create/update success feedback similar to the delete feedback.
+2. Add create/update success feedback for single-link creation (similar to the bulk and delete feedback).
 3. Add an analytics dashboard for `link_clicks`:
    - Click counts by link.
    - Referrer, country, device, browser, and OS breakdowns.
    - UTM campaign/source/medium breakdowns.
-4. Add a bulk import workflow:
-   - Parse many rows.
-   - Show a preview table.
-   - Validate each row.
-   - Allow users to fix invalid rows.
-   - Create many links in one protected server action.
-5. Add stronger delete UX:
+4. Add stronger delete UX:
    - Optional undo via archive instead of hard delete.
    - Toast or dismissible feedback.
-6. Add focused tests for affiliate link server-action authorization boundaries.
-7. Review npm audit output for `xlsx` and decide whether to keep `xlsx`, pin a safer version, or replace it.
+5. Add focused tests for affiliate link server-action authorization boundaries.
+6. Review npm audit output for `xlsx` and decide whether to keep `xlsx`, pin a safer version, or replace it.

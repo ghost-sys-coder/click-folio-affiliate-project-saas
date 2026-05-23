@@ -11,17 +11,16 @@ import {
 } from "../lib/affiliate-link-import.ts";
 import { getDefaultAffiliateLinkValues } from "../lib/affiliate-links.ts";
 
-test("parses sample affiliate link JSON into form values", () => {
+test("parses sample affiliate link JSON into bulk records", () => {
   const result = parseAffiliateLinkJsonImport(getSampleAffiliateLinkJsonText());
 
-  assert.equal(result.ok, true);
-
-  if (result.ok) {
-    assert.equal(result.values.title, "Creator tool bundle");
-    assert.equal(result.values.destinationUrl, "https://example.com/creator-tool-bundle");
-    assert.equal(result.values.status, "active");
-    assert.equal(result.values.currency, "USD");
-  }
+  assert.equal(result.summary.total, 1);
+  const record = result.records[0];
+  assert.equal(record.isValid, true);
+  assert.equal(record.values.title, "Creator tool bundle");
+  assert.equal(record.values.destinationUrl, "https://example.com/creator-tool-bundle");
+  assert.equal(record.values.status, "active");
+  assert.equal(record.values.currency, "USD");
 });
 
 test("merges imported fields over existing form values", () => {
@@ -37,32 +36,48 @@ test("merges imported fields over existing form values", () => {
     currentValues
   );
 
-  assert.equal(result.ok, true);
-
-  if (result.ok) {
-    assert.equal(result.values.title, "Imported title");
-    assert.equal(result.values.destinationUrl, "https://example.com/imported");
-    assert.equal(result.values.buttonLabel, "Shop now");
-  }
+  assert.equal(result.summary.total, 1);
+  const record = result.records[0];
+  assert.equal(record.isValid, true);
+  assert.equal(record.values.title, "Imported title");
+  assert.equal(record.values.destinationUrl, "https://example.com/imported");
+  assert.equal(record.values.buttonLabel, "Shop now");
 });
 
-test("rejects bulk JSON arrays on the single link form", () => {
-  const result = parseAffiliateLinkJsonImport("[]");
+test("supports bulk JSON arrays", () => {
+  const result = parseAffiliateLinkJsonImport(JSON.stringify([
+    { title: "Link 1", destinationUrl: "https://e.com/1" },
+    { title: "Link 2", destinationUrl: "https://e.com/2" }
+  ]));
 
-  assert.equal(result.ok, false);
+  assert.equal(result.summary.total, 2);
+  assert.equal(result.records[0].values.title, "Link 1");
+  assert.equal(result.records[1].values.title, "Link 2");
 });
 
-test("parses sample affiliate link CSV into form values", () => {
+test("parses sample affiliate link CSV into bulk records", () => {
   const result = parseAffiliateLinkCsvImport(getSampleAffiliateLinkCsvText());
 
-  assert.equal(result.ok, true);
+  assert.equal(result.summary.total, 1);
+  const record = result.records[0];
+  assert.equal(record.isValid, true);
+  assert.equal(record.values.title, "Creator tool bundle");
+  assert.equal(record.values.destinationUrl, "https://example.com/creator-tool-bundle");
+  assert.equal(record.values.status, "active");
+  assert.equal(record.values.currency, "USD");
+});
 
-  if (result.ok) {
-    assert.equal(result.values.title, "Creator tool bundle");
-    assert.equal(result.values.destinationUrl, "https://example.com/creator-tool-bundle");
-    assert.equal(result.values.status, "active");
-    assert.equal(result.values.currency, "USD");
-  }
+test("parses multiple CSV rows", () => {
+  const csv = [
+    "title,destinationUrl",
+    "Link A,https://a.com",
+    "Link B,https://b.com"
+  ].join("\n");
+  const result = parseAffiliateLinkCsvImport(csv);
+
+  assert.equal(result.summary.total, 2);
+  assert.equal(result.records[0].values.title, "Link A");
+  assert.equal(result.records[1].values.title, "Link B");
 });
 
 test("parses quoted CSV fields with commas", () => {
@@ -73,38 +88,40 @@ test("parses quoted CSV fields with commas", () => {
     ].join("\n")
   );
 
-  assert.equal(result.ok, true);
-
-  if (result.ok) {
-    assert.equal(result.values.title, "Desk setup");
-    assert.equal(result.values.description, "Monitor, keyboard, and chair");
-    assert.equal(result.values.destinationUrl, "https://example.com/desk");
-  }
+  assert.equal(result.summary.total, 1);
+  const record = result.records[0];
+  assert.equal(record.isValid, true);
+  assert.equal(record.values.title, "Desk setup");
+  assert.equal(record.values.description, "Monitor, keyboard, and chair");
+  assert.equal(record.values.destinationUrl, "https://example.com/desk");
 });
 
-test("parses the first Excel worksheet row into form values", async () => {
-  const worksheet = XLSX.utils.json_to_sheet([
+test("parses multiple Excel worksheet rows", async () => {
+  const data = [
     {
-      title: "Workbook link",
-      destinationUrl: "https://example.com/workbook",
+      title: "Workbook link 1",
+      destinationUrl: "https://example.com/1",
       buttonLabel: "Open offer",
       status: "inactive",
       currency: "gbp",
     },
-  ]);
+    {
+      title: "Workbook link 2",
+      destinationUrl: "https://example.com/2",
+      buttonLabel: "Open offer",
+      status: "active",
+      currency: "usd",
+    },
+  ];
+  const worksheet = XLSX.utils.json_to_sheet(data);
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, "Links");
   const buffer = XLSX.write(workbook, { bookType: "xlsx", type: "buffer" });
 
   const result = await parseAffiliateLinkExcelImport(buffer);
 
-  assert.equal(result.ok, true);
-
-  if (result.ok) {
-    assert.equal(result.values.title, "Workbook link");
-    assert.equal(result.values.destinationUrl, "https://example.com/workbook");
-    assert.equal(result.values.buttonLabel, "Open offer");
-    assert.equal(result.values.status, "inactive");
-    assert.equal(result.values.currency, "GBP");
-  }
+  assert.equal(result.summary.total, 2);
+  assert.equal(result.records[0].values.title, "Workbook link 1");
+  assert.equal(result.records[1].values.title, "Workbook link 2");
+  assert.equal(result.records[0].values.currency, "GBP");
 });

@@ -157,6 +157,27 @@ export function validateAffiliateLinkForm(formData: FormData) {
   } as const;
 }
 
+export function validateBulkAffiliateLinks(links: AffiliateLinkValues[]) {
+  const results = links.map((values) => {
+    const result = affiliateLinkFormSchema.safeParse(values);
+    return {
+      values,
+      isValid: result.success,
+      data: result.success ? result.data : null,
+      errors: result.success ? {} : flattenFieldErrors(result.error.flatten().fieldErrors),
+    };
+  });
+
+  const allValid = results.every((r) => r.isValid);
+  const validData = results.filter((r) => r.isValid).map((r) => r.data as ValidAffiliateLinkInput);
+
+  return {
+    allValid,
+    results,
+    validData,
+  };
+}
+
 export function affiliateLinkToFormValues(link: {
   title: string;
   description: string | null;
