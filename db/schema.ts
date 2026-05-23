@@ -112,23 +112,63 @@ export const campaignsTable = pgTable("campaigns", {
 
 export type Campaign = typeof campaignsTable.$inferSelect;
 
+export const planStatusEnum = pgEnum("plan_status", [
+    "trialing",
+    "active",
+    "expired",
+    "canceled",
+]);
+
+export const planEnum = pgEnum("plan_enum", [
+    "trial",
+    "starter",
+    "pro",
+    "creator_plus",
+]);
+
+export const paymentProviderEnum = pgEnum("payment_provider_enum", [
+    "pesapal",
+    "dgateway",
+    "stripe",
+    "paypal",
+]);
+
 export const subscriptionsTable = pgTable("subscriptions", {
     id: uuid("id").primaryKey().defaultRandom(),
-    profileId: uuid("profile_id").notNull().references(() => profilesTable.id),
     userId: uuid("user_id").notNull().references(() => usersTable.id),
-    paymentProvider: text("payment_provider").notNull(),
+    paymentProvider: paymentProviderEnum("payment_provider"),
     providerCustomerId: text("provider_customer_id"),
     providerSubscriptionId: text("provider_subscription_id"),
-    plan: text("plan").notNull().default("free"),
-    status: text("status").default("free"),
+    plan: planEnum("plan").notNull().default("trial"),
+    status: planStatusEnum("status").default("trialing"),
+    trialStartedAt: timestamp("trial_started_at").notNull().defaultNow(),
+    trialEndsAt: timestamp("trial_ends_at").notNull().defaultNow(),
+    currentPeriodStartedAt: timestamp("current_period_started_at"),
     currentPeriodEnd: timestamp("current_period_end"),
-    amount: numeric("amount", { precision: 10, scale: 2 }).notNull(),
+    amount: numeric("amount", { precision: 10, scale: 2 }).notNull().default("0"),
     currency: text("currency").default("USD"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow()
 });
 
 export type Subscription = typeof subscriptionsTable.$inferSelect;
+
+// usage events table to track important events related to user activity, subscriptions, etc. for analytics and debugging purposes
+
+export const usageEventTypeEnum = pgEnum("usage_event_type", [
+  "content_generation",
+  "affiliate_link_created",
+  "affiliate_link_imported",
+  "campaign_url_generated",
+]);
+
+export const usageEventsTable = pgTable("usage_events", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull().references(() => usersTable.id),
+    eventType: usageEventTypeEnum("event_type").notNull(),
+    metadata: jsonb("metadata"),
+    createdAt: timestamp("created_at").notNull().defaultNow()
+});
 
 // stores AI generated content for profiles, campaigns, etc. for future reference and to avoid regenerating the same content multiple times
 export const aiContentTable = pgTable("ai_content", {
