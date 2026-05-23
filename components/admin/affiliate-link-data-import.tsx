@@ -26,21 +26,21 @@ import {
   parseAffiliateLinkCsvImport,
   parseAffiliateLinkExcelImport,
   parseAffiliateLinkJsonImport,
-  sampleAffiliateLinkJson,
+  sampleAffiliateLinks,
+  type AffiliateLinkBulkImportResult,
 } from "@/lib/affiliate-link-import";
 
 type AffiliateLinkDataImportProps = {
   currentValues: AffiliateLinkValues;
-  onImport: (values: AffiliateLinkValues) => void;
+  onImportResult: (result: AffiliateLinkBulkImportResult) => void;
 };
 
 export function AffiliateLinkDataImport({
   currentValues,
-  onImport,
+  onImportResult,
 }: AffiliateLinkDataImportProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importText, setImportText] = useState("");
-  const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const sampleJsonText = getSampleAffiliateLinkJsonText();
   const sampleCsvText = getSampleAffiliateLinkCsvText();
@@ -51,21 +51,14 @@ export function AffiliateLinkDataImport({
     sampleCsvText
   )}`;
 
-  function applyImportResult(
-    result: ReturnType<
-      typeof parseAffiliateLinkJsonImport | typeof parseAffiliateLinkCsvImport
-    >
-  ) {
-
-    if (!result.ok) {
-      setError(result.message);
-      setMessage("");
+  function applyImportResult(result: AffiliateLinkBulkImportResult) {
+    if (result.summary.total === 0) {
+      setError("No valid records found in the input.");
       return;
     }
 
-    onImport(result.values);
+    onImportResult(result);
     setError("");
-    setMessage("Import loaded into the form. Review the fields before saving.");
   }
 
   function importPastedData(text: string) {
@@ -115,13 +108,12 @@ export function AffiliateLinkDataImport({
     }
 
     setError("Upload a .json, .csv, .xlsx, or .xls file.");
-    setMessage("");
     event.target.value = "";
   }
 
   async function downloadSampleWorkbook() {
     const xlsx = await import("xlsx");
-    const worksheet = xlsx.utils.json_to_sheet([sampleAffiliateLinkJson]);
+    const worksheet = xlsx.utils.json_to_sheet(sampleAffiliateLinks);
     const workbook = xlsx.utils.book_new();
     xlsx.utils.book_append_sheet(workbook, worksheet, "Links");
     const workbookArray = xlsx.write(workbook, {
@@ -143,9 +135,6 @@ export function AffiliateLinkDataImport({
   function loadSampleText(format: "json" | "csv") {
     setImportText(format === "json" ? sampleJsonText : sampleCsvText);
     setError("");
-    setMessage(
-      `${format.toUpperCase()} sample loaded. Edit it or fill the form.`
-    );
   }
 
   return (
@@ -157,8 +146,7 @@ export function AffiliateLinkDataImport({
             Import data
           </CardTitle>
           <p className="mt-1 text-sm text-muted-foreground">
-            Paste JSON or CSV, or upload a JSON, CSV, or Excel file to fill the
-            form.
+            Paste JSON or CSV, or upload a JSON, CSV, or Excel file to begin.
           </p>
         </div>
         <CardAction className="flex flex-wrap gap-2">
@@ -212,13 +200,9 @@ export function AffiliateLinkDataImport({
               placeholder={sampleCsvText}
             />
             <FieldDescription>
-              Supported now: one JSON object, one CSV row, or the first row from
-              the first Excel worksheet.
+              Supported: JSON array, multiple CSV rows, or Excel worksheets.
             </FieldDescription>
             <FieldError>{error}</FieldError>
-            {message ? (
-              <p className="text-sm text-muted-foreground">{message}</p>
-            ) : null}
           </Field>
           <div className="flex flex-wrap gap-2">
             <Button
@@ -227,7 +211,7 @@ export function AffiliateLinkDataImport({
               onClick={() => importPastedData(importText)}
             >
               <FileSpreadsheet className="size-4" />
-              Fill form
+              Process data
             </Button>
             <Button
               type="button"

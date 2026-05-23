@@ -62,6 +62,8 @@ export default async function AdminLinksPage({
   const { userId: clerkUserId } = await auth();
   const params = await searchParams;
   const mutationFailed = params.mutation === "failed";
+  const bulkImportSuccess = params.bulkImport === "success";
+  const bulkImportCount = params.count ? parseInt(params.count as string, 10) : 0;
   const linkDeleted =
     params.linkDeleted === "success"
       ? "success"
@@ -119,6 +121,14 @@ export default async function AdminLinksPage({
           tone="error"
           title="Link change not saved"
           message="Check the database setup and try again."
+        />
+      ) : null}
+
+      {bulkImportSuccess ? (
+        <FeedbackBanner
+          tone="success"
+          title="Bulk import complete"
+          message={`Successfully created ${bulkImportCount} affiliate links in your workspace.`}
         />
       ) : null}
 

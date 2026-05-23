@@ -105,6 +105,18 @@ export async function createAffiliateLinkForWorkspace(input: {
   return link;
 }
 
+export async function createBulkAffiliateLinksForWorkspace(input: {
+  userId: string;
+  profileId: string;
+  data: ValidAffiliateLinkInput[];
+}) {
+  const values = input.data.map((item) =>
+    toAffiliateLinkWrite(input.userId, input.profileId, item)
+  );
+
+  return getDb().insert(affiliateLinksTable).values(values).returning();
+}
+
 export async function updateAffiliateLinkForWorkspace(input: {
   id: string;
   userId: string;
