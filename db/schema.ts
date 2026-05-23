@@ -112,6 +112,7 @@ export const campaignsTable = pgTable("campaigns", {
 
 export type Campaign = typeof campaignsTable.$inferSelect;
 
+
 export const planStatusEnum = pgEnum("plan_status", [
     "trialing",
     "active",
@@ -152,6 +153,56 @@ export const subscriptionsTable = pgTable("subscriptions", {
 });
 
 export type Subscription = typeof subscriptionsTable.$inferSelect;
+
+
+// payments table 
+export const paymentStatusEnum = pgEnum("payment_status", [
+  "pending",
+  "completed",
+  "failed",
+  "invalid",
+  "reversed",
+  "cancelled",
+]);
+
+export const paymentsTable = pgTable("payments", {
+  id: uuid("id").primaryKey().defaultRandom(),
+
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => usersTable.id),
+
+  subscriptionId: uuid("subscription_id")
+    .references(() => subscriptionsTable.id),
+
+  provider: text("provider").notNull().default("pesapal"),
+
+  plan: planEnum("plan").notNull(),
+
+  merchantReference: text("merchant_reference").notNull().unique(),
+
+  orderTrackingId: text("order_tracking_id").unique(),
+
+  amount: numeric("amount", { precision: 10, scale: 2 }).notNull(),
+
+  currency: text("currency").notNull().default("USD"),
+
+  status: paymentStatusEnum("status").notNull().default("pending"),
+
+  paymentMethod: text("payment_method"),
+
+  confirmationCode: text("confirmation_code"),
+
+  paymentAccount: text("payment_account"),
+
+  rawStatus: text("raw_status"),
+
+  rawResponse: jsonb("raw_response"),
+
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
 
 // usage events table to track important events related to user activity, subscriptions, etc. for analytics and debugging purposes
 

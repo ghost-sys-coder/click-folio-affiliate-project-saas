@@ -1,9 +1,33 @@
-import React from 'react';
+"use client";
+import React, { useState } from 'react';
 import Link from "next/link";
 import { Check } from "lucide-react";
 import { Plan } from './PricingSection';
+import { Button } from '../ui/button';
+import axios from 'axios';
 
 const PricingCard = ({ plan }: { plan: Plan }) => {
+    // test payments with pesapal
+    const [isSubscribing, setIsSubscribing] = useState(false);
+
+    const handleSubscription = async () => {
+        setIsSubscribing(true);
+        try {
+            const response = await axios.post("/api/payments/pesapal/create-order");
+            console.log("Pesapal order response", response.data);
+                if (response.data.success) {
+                    const { order } = response.data;
+                    // Redirect the user to the Pesapal payment page
+                    window.location.href = order.redirect_url;
+                } else {
+                    console.error("Failed to create Pesapal order", response.data.message);
+                }
+        } catch (error) {
+            console.error("Error creating Pesapal order", error);
+        } finally {
+            setIsSubscribing(false);
+        }
+    } 
     return (
         <div
             key={plan.name}
@@ -46,15 +70,17 @@ const PricingCard = ({ plan }: { plan: Plan }) => {
                 ))}
             </ul>
 
-            <Link
-                href={plan.href}
-                className={`mt-8 inline-flex w-full items-center justify-center rounded-full px-5 py-3 text-sm font-semibold transition ${plan.highlighted
+            <Button
+                // href={plan.href}
+                className={`mt-8 inline-flex w-full items-center justify-center rounded-full px-5 py-5 text-sm font-semibold transition ${plan.highlighted
                         ? "bg-foreground text-background hover:bg-foreground/90"
                         : "bg-primary text-primary-foreground hover:bg-primary-hover"
                     }`}
+                onClick={handleSubscription}
+                disabled={isSubscribing}
             >
-                {plan.cta}
-            </Link>
+                {isSubscribing ? "Processing..." : plan.cta}
+            </Button>
         </div>
     )
 }
