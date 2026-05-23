@@ -17,8 +17,13 @@ export function isMissingTableError(error: unknown) {
 
   return (
     text.includes("42p01") ||
-    (text.includes("failed query") && text.includes('from "affiliate_links"')) ||
-    (text.includes("affiliate_links") &&
+    (text.includes("failed query") && 
+      (text.includes('"affiliate_links"') || 
+       text.includes('"subscriptions"') || 
+       text.includes('"usage_events"'))) ||
+    ((text.includes("affiliate_links") || 
+      text.includes("subscriptions") || 
+      text.includes("usage_events")) &&
       text.includes("relation") &&
       text.includes("does not exist"))
   );

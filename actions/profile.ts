@@ -28,7 +28,17 @@ export async function updateProfile(
     };
   }
 
-  const userPlan = await getCurrentUserPlan();
+  const planResult = await getCurrentUserPlan();
+
+  if (!planResult.ok) {
+      return {
+          message: planResult.error === "database-setup-required"
+              ? "Database setup required. Run migrations to enable profile settings."
+              : "An unexpected error occurred. Please try again."
+      };
+  }
+
+  const userPlan = planResult.plan;
 
   if (userPlan.status === "expired") {
     return { message: "Your trial has expired. Upgrade to continue updating your profile." };

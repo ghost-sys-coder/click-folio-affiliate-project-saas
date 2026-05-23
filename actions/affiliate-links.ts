@@ -44,7 +44,18 @@ export async function createAffiliateLink(
     };
   }
 
-  const userPlan = await getCurrentUserPlan();
+  const planResult = await getCurrentUserPlan();
+
+  if (!planResult.ok) {
+    return {
+      message: planResult.error === "database-setup-required" 
+        ? "Database setup required. Please contact support or run migrations."
+        : "An unexpected error occurred. Please try again.",
+      values: validation.values,
+    };
+  }
+
+  const userPlan = planResult.plan;
 
   if (userPlan.status === "expired") {
     return {
@@ -85,11 +96,20 @@ export async function createAffiliateLink(
 }
 
 export async function createBulkAffiliateLinks(links: AffiliateLinkValues[]) {
-  const userPlan = await getCurrentUserPlan();
+  const planResult = await getCurrentUserPlan();
+
+  if (!planResult.ok) {
+    throw new Error(planResult.error === "database-setup-required"
+      ? "Database setup required. Run migrations to enable bulk imports."
+      : "An unexpected error occurred. Please try again.");
+  }
+
+  const userPlan = planResult.plan;
 
   if (userPlan.status === "expired") {
     throw new Error("Your trial has expired. Upgrade to continue importing links.");
   }
+
 
   if (!canImportRows(links.length, userPlan.plan)) {
     throw new Error(`You can only import up to ${userPlan.limits.maxImportRowsPerUpload} links at once on the ${userPlan.limits.label} plan.`);

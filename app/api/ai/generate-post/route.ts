@@ -17,7 +17,18 @@ import { getMonthlyContentGenerationCount, recordUsageEvent } from "@/lib/usage"
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
-  const userPlan = await getCurrentUserPlan();
+  const planResult = await getCurrentUserPlan();
+
+  if (!planResult.ok) {
+    return NextResponse.json(
+      { error: planResult.error === "database-setup-required"
+        ? "Database setup required. Contact support."
+        : "An unexpected error occurred." },
+      { status: 503 }
+    );
+  }
+
+  const userPlan = planResult.plan;
 
   if (userPlan.status === "expired") {
     return NextResponse.json(

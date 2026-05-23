@@ -1,9 +1,33 @@
-import { AlertTriangle, Clock, Zap } from "lucide-react";
+import { AlertTriangle, Clock, Database, Zap } from "lucide-react";
 import Link from "next/link";
 import { getCurrentUserPlan } from "@/lib/subscriptions";
 
 export async function PlanStatusBanner() {
-  const userPlan = await getCurrentUserPlan();
+  const result = await getCurrentUserPlan();
+
+  if (!result.ok) {
+      if (result.error === "database-setup-required") {
+          return (
+              <div className="mb-6 flex items-center justify-between gap-4 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm shadow-xs">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-500/10 text-amber-600 border border-amber-500/20">
+                    <Database className="size-5" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-amber-700">Database setup required</p>
+                    <p className="text-muted-foreground text-xs">Run your migrations to enable subscription and plan features.</p>
+                  </div>
+                </div>
+                <code className="rounded bg-muted px-2 py-1 text-[10px] font-mono">
+                  npx drizzle-kit migrate
+                </code>
+              </div>
+          );
+      }
+      return null;
+  }
+
+  const userPlan = result.plan;
 
   if (userPlan.status === "expired") {
     return (
