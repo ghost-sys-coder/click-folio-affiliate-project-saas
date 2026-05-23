@@ -62,7 +62,7 @@ export const adminNavSections: AdminNavSection[] = [
         icon: CreditCard,
       },
       {
-        title: "Settings",
+        title: "Profile Settings",
         href: "/admin/settings",
         icon: Settings,
       },
