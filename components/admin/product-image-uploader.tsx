@@ -1,18 +1,11 @@
 "use client";
 
 import { useRef, useState, type ChangeEvent } from "react";
-import { ImagePlus, Loader2, X, Upload } from "lucide-react";
+import { Loader2, Upload } from "lucide-react";
 
 import { createCloudinaryUploadSignature } from "@/actions/cloudinary";
 import { Button } from "@/components/ui/button";
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldLabel,
-} from "@/components/ui/field";
 import { uploadImageToCloudinary } from "@/lib/cloudinary-upload";
-import { Input } from "@/components/ui/input";
 
 type ProductImageUploaderProps = {
   onUpload: (url: string) => void;

@@ -10,6 +10,7 @@ import {
   createBulkAffiliateLinksForWorkspace,
   deleteAffiliateLinkForWorkspace,
   getAffiliateLinkWorkspaceByClerkUserId,
+  safeGetAffiliateLinksForWorkspace,
   setAffiliateLinkStatusForWorkspace,
   updateAffiliateLinkForWorkspace,
 } from "@/db/affiliate-links";
@@ -22,6 +23,9 @@ import {
   type AffiliateLinkFormState,
   type AffiliateLinkValues,
 } from "@/lib/affiliate-links";
+import { getCurrentUserPlan } from "@/lib/subscriptions";
+import { canCreateAffiliateLink, canImportRows } from "@/lib/plans";
+import { recordUsageEvent } from "@/lib/usage";
 
 const linkStatusUpdateSchema = affiliateLinkIdSchema.extend({
   status: z.enum(affiliateLinkStatuses),
@@ -40,6 +44,25 @@ export async function createAffiliateLink(
     };
   }
 
+  const userPlan = await getCurrentUserPlan();
+
+  if (userPlan.status === "expired") {
+    return {
+      message: "Your trial has expired. Upgrade to continue creating links.",
+      values: validation.values,
+    };
+  }
+
+  const linksResult = await safeGetAffiliateLinksForWorkspace(userPlan.userId);
+  const currentCount = linksResult.ok ? linksResult.links.length : 0;
+
+  if (!canCreateAffiliateLink(currentCount, userPlan.plan)) {
+    return {
+      message: `You have reached the limit of ${userPlan.limits.maxAffiliateLinks} links for your ${userPlan.limits.label} plan. Upgrade for more.`,
+      values: validation.values,
+    };
+  }
+
   const workspace = await requireAffiliateLinkWorkspace();
 
   try {
@@ -48,6 +71,8 @@ export async function createAffiliateLink(
       profileId: workspace.profileId,
       data: validation.data,
     });
+
+    await recordUsageEvent(userPlan.userId, "affiliate_link_created");
   } catch {
     return {
       message: "We could not create this affiliate link. Please try again.",
@@ -60,6 +85,23 @@ export async function createAffiliateLink(
 }
 
 export async function createBulkAffiliateLinks(links: AffiliateLinkValues[]) {
+  const userPlan = await getCurrentUserPlan();
+
+  if (userPlan.status === "expired") {
+    throw new Error("Your trial has expired. Upgrade to continue importing links.");
+  }
+
+  if (!canImportRows(links.length, userPlan.plan)) {
+    throw new Error(`You can only import up to ${userPlan.limits.maxImportRowsPerUpload} links at once on the ${userPlan.limits.label} plan.`);
+  }
+
+  const linksResult = await safeGetAffiliateLinksForWorkspace(userPlan.userId);
+  const currentCount = linksResult.ok ? linksResult.links.length : 0;
+
+  if (userPlan.limits.maxAffiliateLinks !== null && currentCount + links.length > userPlan.limits.maxAffiliateLinks) {
+    throw new Error(`This import would exceed your limit of ${userPlan.limits.maxAffiliateLinks} links. You currently have ${currentCount} links.`);
+  }
+
   const workspace = await requireAffiliateLinkWorkspace();
   const validation = validateBulkAffiliateLinks(links);
 
@@ -72,6 +114,11 @@ export async function createBulkAffiliateLinks(links: AffiliateLinkValues[]) {
       userId: workspace.userId,
       profileId: workspace.profileId,
       data: validation.validData,
+    });
+
+    await recordUsageEvent(userPlan.userId, "affiliate_link_imported", {
+        source: "bulk",
+        count: links.length
     });
   } catch {
     throw new Error("We could not create these affiliate links. Please try again.");

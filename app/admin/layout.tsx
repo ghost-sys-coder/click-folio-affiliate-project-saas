@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { AdminThemeShell } from "@/components/admin/admin-theme";
 import { AdminThemeSwitcher } from "@/components/admin/admin-theme-switcher";
+import { PlanStatusBanner } from "@/components/admin/plan-status-banner";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { getOnboardingStateByClerkUserId } from "@/db/profiles";
@@ -39,7 +40,10 @@ const AdminDashboardLayout = async ({ children }: { children: React.ReactNode })
               </div>
               <AdminThemeSwitcher />
             </header>
-            <div className="flex-1 p-4 md:p-6">{children}</div>
+            <div className="flex-1 p-4 md:p-6">
+              <PlanStatusBanner />
+              {children}
+            </div>
           </SidebarInset>
         </SidebarProvider>
       </TooltipProvider>

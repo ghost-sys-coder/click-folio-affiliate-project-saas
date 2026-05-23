@@ -92,4 +92,29 @@ export const plans: Record<PlanKey, PlanLimits> = {
     }
 }
 
+export function getPlanLimits(planKey: PlanKey): PlanLimits {
+    return plans[planKey] || plans.trial;
+}
+
+export function canCreateAffiliateLink(currentCount: number, planKey: PlanKey): boolean {
+    const limits = getPlanLimits(planKey);
+    if (limits.maxAffiliateLinks === null) return true;
+    return currentCount < limits.maxAffiliateLinks;
+}
+
+export function canImportRows(rowCount: number, planKey: PlanKey): boolean {
+    const limits = getPlanLimits(planKey);
+    return rowCount <= limits.maxImportRowsPerUpload;
+}
+
+export function canGenerateContent(monthlyCount: number, planKey: PlanKey): boolean {
+    const limits = getPlanLimits(planKey);
+    return monthlyCount < limits.maxContentGenerations;
+}
+
+export function hasAnalyticsAccess(level: AnalyticsLevel, required: AnalyticsLevel): boolean {
+    const levels: AnalyticsLevel[] = ["basic", "advanced", "premium"];
+    return levels.indexOf(level) >= levels.indexOf(required);
+}
+
 

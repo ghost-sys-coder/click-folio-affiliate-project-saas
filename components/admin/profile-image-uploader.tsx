@@ -50,7 +50,7 @@ export function ProfileImageUploader({
       const signature = await createCloudinaryUploadSignature(subfolder);
       const upload = await uploadImageToCloudinary(file, signature);
       onChange(upload.secureUrl);
-    } catch (err) {
+    } catch {
       setError("Failed to upload image. Please try again.");
     } finally {
       setUploading(false);

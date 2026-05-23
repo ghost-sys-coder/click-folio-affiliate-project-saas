@@ -1,4 +1,3 @@
-import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
 import { AnalyticsDashboard } from "@/components/admin/analytics/analytics-dashboard";
@@ -12,33 +11,27 @@ import {
   getTopMediums,
   getTopSources,
 } from "@/db/analytics";
-import { getProfileByUserId, getUserByClerkUserId } from "@/db/profiles";
+import { getProfileByUserId } from "@/db/profiles";
+import { getCurrentUserPlan } from "@/lib/subscriptions";
 
 export const dynamic = "force-dynamic";
 
 const AnalyticsPage = async () => {
-  const { userId: clerkUserId } = await auth();
+  const userPlan = await getCurrentUserPlan();
 
-  if (!clerkUserId) {
-    redirect("/sign-in?redirect_url=/admin/analytics");
-  }
-
-  const user = await getUserByClerkUserId(clerkUserId);
-
-  if (!user || user.isDeleted) {
-    redirect("/onboarding");
-  }
-
-  const profile = await getProfileByUserId(user.id);
+  const profile = await getProfileByUserId(userPlan.userId);
 
   if (!profile) {
     redirect("/onboarding");
   }
 
   const workspace = {
-    userId: user.id,
+    userId: userPlan.userId,
     profileId: profile.id,
   };
+
+  const historyDays = userPlan.limits.clickHistoryDays;
+
   const [
     summary,
     topLinks,
@@ -49,14 +42,14 @@ const AnalyticsPage = async () => {
     deviceBreakdown,
     countryBreakdown,
   ] = await Promise.all([
-    getClickSummary(workspace),
-    getTopLinks(workspace),
-    getTopSources(workspace),
-    getTopMediums(workspace),
-    getTopCampaigns(workspace),
-    getRecentClicks(workspace),
-    getDeviceBreakdown(workspace),
-    getCountryBreakdown(workspace),
+    getClickSummary(workspace, historyDays),
+    getTopLinks(workspace, 5, historyDays),
+    getTopSources(workspace, 5, historyDays),
+    getTopMediums(workspace, 5, historyDays),
+    getTopCampaigns(workspace, 5, historyDays),
+    getRecentClicks(workspace, 10, historyDays),
+    getDeviceBreakdown(workspace, 5, historyDays),
+    getCountryBreakdown(workspace, 5, historyDays),
   ]);
 
   return (
@@ -69,6 +62,7 @@ const AnalyticsPage = async () => {
       recentClicks={recentClicks}
       deviceBreakdown={deviceBreakdown}
       countryBreakdown={countryBreakdown}
+      analyticsLevel={userPlan.limits.analyticsLevel}
     />
   );
 };

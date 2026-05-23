@@ -135,7 +135,7 @@ export const paymentProviderEnum = pgEnum("payment_provider_enum", [
 
 export const subscriptionsTable = pgTable("subscriptions", {
     id: uuid("id").primaryKey().defaultRandom(),
-    userId: uuid("user_id").notNull().references(() => usersTable.id),
+    userId: uuid("user_id").notNull().unique().references(() => usersTable.id),
     paymentProvider: paymentProviderEnum("payment_provider"),
     providerCustomerId: text("provider_customer_id"),
     providerSubscriptionId: text("provider_subscription_id"),
