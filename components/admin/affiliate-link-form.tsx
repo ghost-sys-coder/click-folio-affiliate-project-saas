@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useActionState, useEffect, useState } from "react";
-import { ExternalLink, Save } from "lucide-react";
+import { ExternalLink, Save, X } from "lucide-react";
 
+import { ProductImageUploader } from "@/components/admin/product-image-uploader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -133,17 +134,47 @@ export function AffiliateLinkForm({
             <div className="grid gap-4 md:grid-cols-2">
               <Field>
                 <FieldLabel htmlFor="imageUrl">Image URL</FieldLabel>
-                <Input
-                  id="imageUrl"
-                  name="imageUrl"
-                  type="url"
-                  value={values.imageUrl}
-                  onChange={(event) =>
-                    updateValue("imageUrl", event.target.value)
-                  }
-                  aria-invalid={Boolean(state.errors?.imageUrl)}
-                  placeholder="https://example.com/product.png"
-                />
+                <div className="flex flex-col gap-3">
+                  {values.imageUrl ? (
+                    <div className="group relative aspect-square w-24 overflow-hidden rounded-lg border border-border bg-muted/30">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={values.imageUrl}
+                        alt="Product preview"
+                        className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src =
+                            "https://placehold.co/400x400?text=Invalid+Image";
+                        }}
+                      />
+                      <button
+                        type="button"
+                        className="absolute right-1 top-1 rounded-full bg-destructive p-1 text-destructive-foreground opacity-0 shadow-sm transition-opacity hover:bg-destructive/90 group-hover:opacity-100"
+                        onClick={() => updateValue("imageUrl", "")}
+                        aria-label="Remove image"
+                      >
+                        <X className="size-3" />
+                      </button>
+                    </div>
+                  ) : null}
+                  <div className="flex flex-col gap-2">
+                    <Input
+                      id="imageUrl"
+                      name="imageUrl"
+                      type="url"
+                      value={values.imageUrl}
+                      onChange={(event) =>
+                        updateValue("imageUrl", event.target.value)
+                      }
+                      aria-invalid={Boolean(state.errors?.imageUrl)}
+                      placeholder="https://example.com/product.png"
+                    />
+                    <ProductImageUploader
+                      onUpload={(url) => updateValue("imageUrl", url)}
+                      error={state.errors?.imageUrl}
+                    />
+                  </div>
+                </div>
                 <FieldError>{state.errors?.imageUrl}</FieldError>
               </Field>
 

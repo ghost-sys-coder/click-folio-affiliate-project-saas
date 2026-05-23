@@ -6,12 +6,15 @@ import {
   type CloudinaryUploadSignature,
 } from "@/lib/cloudinary";
 
-export async function createCloudinaryUploadSignature(): Promise<CloudinaryUploadSignature> {
+export async function createCloudinaryUploadSignature(
+  subfolder?: string
+): Promise<CloudinaryUploadSignature> {
   const config = getCloudinaryUploadConfig();
+  const folder = subfolder ? `${config.folder}/${subfolder}` : config.folder;
   const timestamp = Math.round(Date.now() / 1000);
   const signature = buildCloudinaryUploadSignature(
     {
-      folder: config.folder,
+      folder,
       timestamp,
       upload_preset: config.uploadPreset,
     },
@@ -21,7 +24,7 @@ export async function createCloudinaryUploadSignature(): Promise<CloudinaryUploa
   return {
     cloudName: config.cloudName,
     apiKey: config.apiKey,
-    folder: config.folder,
+    folder,
     uploadPreset: config.uploadPreset,
     timestamp,
     signature,
