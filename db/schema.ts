@@ -1,3 +1,4 @@
+import { profile } from "console";
 import { integer, text, boolean, pgTable, timestamp, uuid, numeric, json, jsonb, pgEnum } from "drizzle-orm/pg-core";
 
 // create user table
@@ -253,4 +254,57 @@ export const generatedPostsTable = pgTable("generated_posts", {
 });
 
 export type GeneratedPost = typeof generatedPostsTable.$inferSelect;
+
+
+
+// landing page generation table 
+export const landingPageStatusEnum = pgEnum("landing_page_status", [
+    "draft",
+    "published",
+    "archived"
+]);
+
+export const generatedLandingPagesTable = pgTable("landing_pages", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull().references(() => usersTable.id),
+    profileId: uuid("profile_id").notNull().references(() => profilesTable.id),
+    affiliateLinkId: uuid("affiliate_link_id").notNull().references(() => affiliateLinksTable.id),
+    title: text("title").notNull(),
+    slug: text("slug").notNull().unique(),
+    status: landingPageStatusEnum("status").notNull().default("draft"),
+    theme: text("theme").notNull().default("growth-mint"),
+    inputJson: jsonb("input_json").notNull(),
+    outputJson: jsonb("output_json").notNull(),
+    seoTitle: text("seo_title"),
+    seoDescription: text("seo_description"),
+    publishedAt: timestamp("published_at"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow()
+});
+
+
+export const landingPageVisitsTable = pgTable("landing_page_visits", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    landingPageId: uuid("landing_page_id").notNull().references(() => generatedLandingPagesTable.id),
+    userId: uuid("user_id").references(() => usersTable.id),
+    profileId: uuid("profile_id").notNull().references(() => profilesTable.id),
+    affiliateLinkId: uuid("affiliate_link_id").notNull().references(() => affiliateLinksTable.id),
+    referer: text("referer"),
+    userAgent: text("user_agent"),
+    ipAddressHash: text("ip_address_hash"),
+    country: text("country"),
+    deviceType: text("device_type"),
+    browser: text("browser"),
+    os: text("os"),
+
+    source: text("source"),
+    medium: text("medium"),
+    campaign: text("campaign"),
+    content: text("content"),
+    term: text("term"),
+
+    viewedAt: timestamp("viewed_at").notNull().defaultNow(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow()
+})
 
