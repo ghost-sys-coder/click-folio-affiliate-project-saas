@@ -82,25 +82,40 @@ export async function POST(request: Request) {
       },
     });
 
+    // Extract headline from hero section
+    const heroSection = result.output.sections.find((s) => s.type === "hero");
+    const headline = heroSection?.type === "hero" ? heroSection.content.headline : link.title;
+
     // Create a base slug from the title
-    const baseSlug = slugify(result.output.hero.headline.slice(0, 50));
+    const baseSlug = slugify(headline.slice(0, 50));
     const uniqueSlug = `${baseSlug}-${Math.random().toString(36).substring(2, 7)}`;
+
+    // Ensure uploaded media is included in the hero section if provided
+    const finalSections = result.output.sections.map((section) => {
+      if (section.type === "hero") {
+        return {
+          ...section,
+          content: {
+            ...section.content,
+            imageUrl: validation.data.imageUrl || section.content.imageUrl,
+            videoUrl: validation.data.videoUrl || section.content.videoUrl,
+          },
+        };
+      }
+      return section;
+    });
 
     const savedDraft = await createLandingPageDraft({
       userId: userPlan.userId,
       profileId: profile.id,
       affiliateLinkId: link.id,
       slug: uniqueSlug,
-      title: result.output.hero.headline,
+      title: headline,
       theme: validation.data.theme,
       inputJson: validation.data,
       outputJson: {
         ...result.output,
-        hero: {
-          ...result.output.hero,
-          imageUrl: validation.data.imageUrl || undefined,
-          videoUrl: validation.data.videoUrl || undefined,
-        },
+        sections: finalSections,
       },
       seoTitle: result.output.seo.title,
       seoDescription: result.output.seo.description,

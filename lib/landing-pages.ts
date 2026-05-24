@@ -53,14 +53,16 @@ export const landingPageGenerationSchema = z.object({
 
 export type LandingPageGenerationInput = z.infer<typeof landingPageGenerationSchema>;
 
-// Output schema for AI
+// Shared content schemas
 const titleDescriptionSchema = z.object({
   title: z.string().trim().min(1),
   description: z.string().trim().min(1),
 });
 
-export const landingPageOutputSchema = z.object({
-  hero: z.object({
+// Block-based Section Schemas
+export const heroSectionSchema = z.object({
+  type: z.literal("hero"),
+  content: z.object({
     headline: z.string().trim().min(1),
     subheadline: z.string().trim().min(1),
     eyebrow: z.string().trim().optional(),
@@ -68,174 +70,423 @@ export const landingPageOutputSchema = z.object({
     imageUrl: z.string().trim().optional(),
     videoUrl: z.string().trim().optional(),
   }),
-  problem: z.object({
+});
+
+export const problemSectionSchema = z.object({
+  type: z.literal("problem"),
+  content: z.object({
     title: z.string().trim().min(1),
     body: z.string().trim().min(1),
     bullets: z.array(z.string().trim().min(1)).min(1),
   }),
-  solution: z.object({
+});
+
+export const solutionSectionSchema = z.object({
+  type: z.literal("solution"),
+  content: z.object({
     title: z.string().trim().min(1),
     body: z.string().trim().min(1),
   }),
-  benefits: z.array(titleDescriptionSchema).min(1),
-  useCases: z.array(titleDescriptionSchema).min(1),
-  whoItIsFor: z.array(z.string().trim().min(1)).min(1),
-  whoItIsNotFor: z.array(z.string().trim().min(1)).min(1),
-  productHighlights: z.array(titleDescriptionSchema).min(1),
-  faq: z.array(z.object({
-    question: z.string().trim().min(1),
-    answer: z.string().trim().min(1),
-  })).min(1),
-  disclosure: z.string().trim().min(1),
-  finalCta: z.object({
+});
+
+export const benefitsSectionSchema = z.object({
+  type: z.literal("benefits"),
+  content: z.object({
+    title: z.string().trim().min(1),
+    items: z.array(titleDescriptionSchema).min(1),
+  }),
+});
+
+export const useCasesSectionSchema = z.object({
+  type: z.literal("useCases"),
+  content: z.object({
+    title: z.string().trim().min(1),
+    items: z.array(titleDescriptionSchema).min(1),
+  }),
+});
+
+export const productHighlightsSectionSchema = z.object({
+  type: z.literal("productHighlights"),
+  content: z.object({
+    title: z.string().trim().min(1),
+    items: z.array(titleDescriptionSchema).min(1),
+  }),
+});
+
+export const audienceSectionSchema = z.object({
+  type: z.literal("audience"),
+  content: z.object({
+    perfectForTitle: z.string().trim().min(1),
+    perfectForItems: z.array(z.string().trim().min(1)).min(1),
+    notForTitle: z.string().trim().min(1),
+    notForItems: z.array(z.string().trim().min(1)).min(1),
+  }),
+});
+
+export const faqSectionSchema = z.object({
+  type: z.literal("faq"),
+  content: z.object({
+    title: z.string().trim().min(1),
+    items: z.array(z.object({
+      question: z.string().trim().min(1),
+      answer: z.string().trim().min(1),
+    })).min(1),
+  }),
+});
+
+export const finalCtaSectionSchema = z.object({
+  type: z.literal("finalCta"),
+  content: z.object({
     headline: z.string().trim().min(1),
     body: z.string().trim().min(1),
     ctaLabel: z.string().trim().min(1),
   }),
+});
+
+export const comparisonSectionSchema = z.object({
+  type: z.literal("comparison"),
+  content: z.object({
+    title: z.string().trim().min(1),
+    leftColumn: z.string().trim().min(1),
+    rightColumn: z.string().trim().min(1),
+    rows: z.array(z.object({
+      feature: z.string().trim().min(1),
+      leftValue: z.string().trim().min(1),
+      rightValue: z.string().trim().min(1),
+      isPositive: z.boolean().optional(),
+    })).min(1),
+  }),
+});
+
+export const howItWorksSectionSchema = z.object({
+  type: z.literal("howItWorks"),
+  content: z.object({
+    title: z.string().trim().min(1),
+    steps: z.array(z.object({
+      title: z.string().trim().min(1),
+      description: z.string().trim().min(1),
+    })).min(1),
+  }),
+});
+
+export const landingPageSectionSchema = z.discriminatedUnion("type", [
+  heroSectionSchema,
+  problemSectionSchema,
+  solutionSectionSchema,
+  benefitsSectionSchema,
+  useCasesSectionSchema,
+  productHighlightsSectionSchema,
+  audienceSectionSchema,
+  faqSectionSchema,
+  finalCtaSectionSchema,
+  comparisonSectionSchema,
+  howItWorksSectionSchema,
+]);
+
+export type LandingPageSection = z.infer<typeof landingPageSectionSchema>;
+
+export const landingPageOutputSchema = z.object({
+  sections: z.array(landingPageSectionSchema).min(3),
+  disclosure: z.string().trim().min(1),
+  riskWarnings: z.array(z.string().trim().min(1)),
   seo: z.object({
     title: z.string().trim().min(1),
     description: z.string().trim().min(1),
   }),
-  riskWarnings: z.array(z.string().trim().min(1)),
 });
 
 export type LandingPageOutput = z.infer<typeof landingPageOutputSchema>;
 
-export const landingPageSystemPrompt = `You are Clickfolio Landing Page Generator, an affiliate marketing landing page strategist.
+export const landingPageSystemPrompt = `You are Clickfolio Landing Page Designer, an affiliate marketing expert.
 
-Your job is to turn one affiliate product or offer into a clear, trustworthy, conversion aware landing page draft.
+Your goal is to design a high-converting, component-based landing page for an affiliate product.
 
-Use only the profile, affiliate link, and extra product context provided. Do not invent product features, discounts, testimonials, personal experience, income claims, scarcity, or unsupported claims.
+Instead of a fixed structure, you will output a sequence of "sections" that best tell the story of the product.
 
-Create a practical landing page with hero copy, problem framing, solution framing, benefits, use cases, FAQ, CTA copy, SEO metadata, and affiliate disclosure.
+AVAILABLE SECTION TYPES:
+1. hero: Always required first. Headline, subheadline, and optional media.
+2. problem: Frame the pain points visitors are facing.
+3. solution: How the product solves the problem.
+4. benefits: Key emotional or functional advantages.
+5. useCases: Specific scenarios where the product is used.
+6. productHighlights: technical features or "specifications".
+7. audience: Clearly define who should (and shouldn't) buy.
+8. comparison: A table comparing this product vs traditional alternatives or "doing nothing".
+9. howItWorks: Step-by-step guide to using the product.
+10. faq: Common questions and objections.
+11. finalCta: A strong closing section to drive clicks.
 
-Keep the page transparent, specific, and easy to scan.
+STRATEGY RULES:
+- Always start with 'hero'.
+- Choose at least 5 other sections that make sense for the specific product.
+- Use 'comparison' if the product has a clear competitive advantage.
+- Use 'howItWorks' if the product is a service or complex software.
+- Ensure the 'disclosure' and 'riskWarnings' are always included at the root level.
+- Do not invent product features, income claims, or fake testimonials.
+- Keep the tone consistent with the user's request.
 
-Return structured JSON only.`;
+Return structured JSON matching the requested block-based schema.`;
 
 export function getLandingPageJsonSchema() {
   return {
     type: "object",
     additionalProperties: false,
-    required: [
-      "hero",
-      "problem",
-      "solution",
-      "benefits",
-      "useCases",
-      "whoItIsFor",
-      "whoItIsNotFor",
-      "productHighlights",
-      "faq",
-      "disclosure",
-      "finalCta",
-      "seo",
-      "riskWarnings",
-    ],
+    required: ["sections", "disclosure", "riskWarnings", "seo"],
     properties: {
-      hero: {
-        type: "object",
-        additionalProperties: false,
-        required: ["headline", "subheadline", "eyebrow", "ctaLabel"],
-        properties: {
-          headline: { type: "string" },
-          subheadline: { type: "string" },
-          eyebrow: { type: "string" },
-          ctaLabel: { type: "string" },
-          imageUrl: { type: "string" },
-          videoUrl: { type: "string" },
-        },
-      },
-      problem: {
-        type: "object",
-        additionalProperties: false,
-        required: ["title", "body", "bullets"],
-        properties: {
-          title: { type: "string" },
-          body: { type: "string" },
-          bullets: { type: "array", items: { type: "string" } },
-        },
-      },
-      solution: {
-        type: "object",
-        additionalProperties: false,
-        required: ["title", "body"],
-        properties: {
-          title: { type: "string" },
-          body: { type: "string" },
-        },
-      },
-      benefits: {
+      sections: {
         type: "array",
         items: {
-          type: "object",
-          additionalProperties: false,
-          required: ["title", "description"],
-          properties: {
-            title: { type: "string" },
-            description: { type: "string" },
-          },
-        },
-      },
-      useCases: {
-        type: "array",
-        items: {
-          type: "object",
-          additionalProperties: false,
-          required: ["title", "description"],
-          properties: {
-            title: { type: "string" },
-            description: { type: "string" },
-          },
-        },
-      },
-      whoItIsFor: { type: "array", items: { type: "string" } },
-      whoItIsNotFor: { type: "array", items: { type: "string" } },
-      productHighlights: {
-        type: "array",
-        items: {
-          type: "object",
-          additionalProperties: false,
-          required: ["title", "description"],
-          properties: {
-            title: { type: "string" },
-            description: { type: "string" },
-          },
-        },
-      },
-      faq: {
-        type: "array",
-        items: {
-          type: "object",
-          additionalProperties: false,
-          required: ["question", "answer"],
-          properties: {
-            question: { type: "string" },
-            answer: { type: "string" },
-          },
+          anyOf: [
+            {
+              type: "object",
+              required: ["type", "content"],
+              properties: {
+                type: { const: "hero" },
+                content: {
+                  type: "object",
+                  required: ["headline", "subheadline", "ctaLabel"],
+                  properties: {
+                    headline: { type: "string" },
+                    subheadline: { type: "string" },
+                    eyebrow: { type: "string" },
+                    ctaLabel: { type: "string" },
+                    imageUrl: { type: "string" },
+                    videoUrl: { type: "string" },
+                  },
+                },
+              },
+            },
+            {
+              type: "object",
+              required: ["type", "content"],
+              properties: {
+                type: { const: "problem" },
+                content: {
+                  type: "object",
+                  required: ["title", "body", "bullets"],
+                  properties: {
+                    title: { type: "string" },
+                    body: { type: "string" },
+                    bullets: { type: "array", items: { type: "string" } },
+                  },
+                },
+              },
+            },
+            {
+              type: "object",
+              required: ["type", "content"],
+              properties: {
+                type: { const: "solution" },
+                content: {
+                  type: "object",
+                  required: ["title", "body"],
+                  properties: {
+                    title: { type: "string" },
+                    body: { type: "string" },
+                  },
+                },
+              },
+            },
+            {
+              type: "object",
+              required: ["type", "content"],
+              properties: {
+                type: { const: "benefits" },
+                content: {
+                  type: "object",
+                  required: ["title", "items"],
+                  properties: {
+                    title: { type: "string" },
+                    items: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        required: ["title", "description"],
+                        properties: {
+                          title: { type: "string" },
+                          description: { type: "string" },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            {
+                type: "object",
+                required: ["type", "content"],
+                properties: {
+                  type: { const: "useCases" },
+                  content: {
+                    type: "object",
+                    required: ["title", "items"],
+                    properties: {
+                      title: { type: "string" },
+                      items: {
+                        type: "array",
+                        items: {
+                          type: "object",
+                          required: ["title", "description"],
+                          properties: {
+                            title: { type: "string" },
+                            description: { type: "string" },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+              {
+                type: "object",
+                required: ["type", "content"],
+                properties: {
+                  type: { const: "productHighlights" },
+                  content: {
+                    type: "object",
+                    required: ["title", "items"],
+                    properties: {
+                      title: { type: "string" },
+                      items: {
+                        type: "array",
+                        items: {
+                          type: "object",
+                          required: ["title", "description"],
+                          properties: {
+                            title: { type: "string" },
+                            description: { type: "string" },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            {
+              type: "object",
+              required: ["type", "content"],
+              properties: {
+                type: { const: "audience" },
+                content: {
+                  type: "object",
+                  required: ["perfectForTitle", "perfectForItems", "notForTitle", "notForItems"],
+                  properties: {
+                    perfectForTitle: { type: "string" },
+                    perfectForItems: { type: "array", items: { type: "string" } },
+                    notForTitle: { type: "string" },
+                    notForItems: { type: "array", items: { type: "string" } },
+                  },
+                },
+              },
+            },
+            {
+              type: "object",
+              required: ["type", "content"],
+              properties: {
+                type: { const: "faq" },
+                content: {
+                  type: "object",
+                  required: ["title", "items"],
+                  properties: {
+                    title: { type: "string" },
+                    items: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        required: ["question", "answer"],
+                        properties: {
+                          question: { type: "string" },
+                          answer: { type: "string" },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            {
+              type: "object",
+              required: ["type", "content"],
+              properties: {
+                type: { const: "finalCta" },
+                content: {
+                  type: "object",
+                  required: ["headline", "body", "ctaLabel"],
+                  properties: {
+                    headline: { type: "string" },
+                    body: { type: "string" },
+                    ctaLabel: { type: "string" },
+                  },
+                },
+              },
+            },
+            {
+              type: "object",
+              required: ["type", "content"],
+              properties: {
+                type: { const: "comparison" },
+                content: {
+                  type: "object",
+                  required: ["title", "leftColumn", "rightColumn", "rows"],
+                  properties: {
+                    title: { type: "string" },
+                    leftColumn: { type: "string" },
+                    rightColumn: { type: "string" },
+                    rows: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        required: ["feature", "leftValue", "rightValue"],
+                        properties: {
+                          feature: { type: "string" },
+                          leftValue: { type: "string" },
+                          rightValue: { type: "string" },
+                          isPositive: { type: "boolean" },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            {
+              type: "object",
+              required: ["type", "content"],
+              properties: {
+                type: { const: "howItWorks" },
+                content: {
+                  type: "object",
+                  required: ["title", "steps"],
+                  properties: {
+                    title: { type: "string" },
+                    steps: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        required: ["title", "description"],
+                        properties: {
+                          title: { type: "string" },
+                          description: { type: "string" },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          ],
         },
       },
       disclosure: { type: "string" },
-      finalCta: {
-        type: "object",
-        additionalProperties: false,
-        required: ["headline", "body", "ctaLabel"],
-        properties: {
-          headline: { type: "string" },
-          body: { type: "string" },
-          ctaLabel: { type: "string" },
-        },
-      },
+      riskWarnings: { type: "array", items: { type: "string" } },
       seo: {
         type: "object",
-        additionalProperties: false,
         required: ["title", "description"],
         properties: {
           title: { type: "string" },
           description: { type: "string" },
         },
       },
-      riskWarnings: { type: "array", items: { type: "string" } },
     },
   };
 }

@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getLandingPageById, updateLandingPage } from "@/db/landing-pages";
 import { getCurrentUserPlan } from "@/lib/subscriptions";
-import type { LandingPageOutput } from "@/lib/landing-pages";
+import type { LandingPageOutput, LandingPageSection } from "@/lib/landing-pages";
 
 export type LandingPageUpdateState = {
   success: boolean;
@@ -23,70 +23,54 @@ export async function updateLandingPageAction(prevState: LandingPageUpdateState,
 
   const output = existing.outputJson as LandingPageOutput;
 
-  const parsePipeString = (val: string) => {
-    return val.split("\n").filter(Boolean).map(line => {
-      const [title, ...rest] = line.split("|");
-      return {
-        title: title.trim(),
-        description: rest.join("|").trim(),
-      };
-    });
-  };
+  // Generic helper to update nested objects in sections
+  const updatedSections = [...output.sections].map((section, index) => {
+    const sectionPrefix = `section.${index}.`;
+    const newContent = { ...section.content };
 
-  const parseFaqString = (val: string) => {
-    return val.split("\n").filter(Boolean).map(line => {
-      const [question, ...rest] = line.split("|");
-      return {
-        question: question.trim(),
-        answer: rest.join("|").trim(),
-      };
+    // Iterate through all keys in the current section's content
+    Object.keys(newContent).forEach(key => {
+      const formValue = formData.get(`${sectionPrefix}${key}`);
+      
+      if (formValue !== null) {
+        // Handle special cases (arrays, booleans)
+        if (key === "bullets" || key === "perfectForItems" || key === "notForItems") {
+          newContent[key] = (formValue as string).split("\n").filter(Boolean);
+        } else if (key === "items" || key === "rows" || key === "steps") {
+          // These complex nested structures are harder to parse from flat FormData
+          // For now, we'll keep the existing values if not explicitly handled
+          // In a real app, you might use a JSON string for these or a more advanced parser
+        } else if (typeof newContent[key] === "boolean") {
+          newContent[key] = formValue === "true";
+        } else {
+          newContent[key] = formValue as string;
+        }
+      }
     });
-  };
 
-  // Manually update nested fields in outputJson
+    return {
+      ...section,
+      content: newContent,
+    };
+  }) as LandingPageSection[];
+
   const updatedOutput: LandingPageOutput = {
     ...output,
-    hero: {
-      ...output.hero,
-      eyebrow: (formData.get("hero.eyebrow") as string) || undefined,
-      headline: formData.get("hero.headline") as string,
-      subheadline: formData.get("hero.subheadline") as string,
-      ctaLabel: formData.get("hero.ctaLabel") as string,
-      imageUrl: (formData.get("hero.imageUrl") as string) || undefined,
-      videoUrl: (formData.get("hero.videoUrl") as string) || undefined,
-    },
-    problem: {
-      ...output.problem,
-      title: formData.get("problem.title") as string,
-      body: formData.get("problem.body") as string,
-      bullets: (formData.get("problem.bullets") as string).split("\n").filter(Boolean),
-    },
-    solution: {
-      ...output.solution,
-      title: formData.get("solution.title") as string,
-      body: formData.get("solution.body") as string,
-    },
-    benefits: parsePipeString(formData.get("benefits") as string),
-    useCases: parsePipeString(formData.get("useCases") as string),
-    whoItIsFor: (formData.get("whoItIsFor") as string).split("\n").filter(Boolean),
-    whoItIsNotFor: (formData.get("whoItIsNotFor") as string).split("\n").filter(Boolean),
-    faq: parseFaqString(formData.get("faq") as string),
-    finalCta: {
-      ...output.finalCta,
-      headline: formData.get("finalCta.headline") as string,
-      body: formData.get("finalCta.body") as string,
-      ctaLabel: formData.get("finalCta.ctaLabel") as string,
-    },
-    disclosure: formData.get("disclosure") as string,
-    riskWarnings: (formData.get("riskWarnings") as string).split("\n").filter(Boolean),
+    sections: updatedSections,
+    disclosure: formData.get("disclosure") as string || output.disclosure,
+    riskWarnings: (formData.get("riskWarnings") as string || "").split("\n").filter(Boolean),
+    seo: {
+      title: formData.get("seoTitle") as string || output.seo.title,
+      description: formData.get("seoDescription") as string || output.seo.description,
+    }
   };
 
   try {
     await updateLandingPage(id, userId, {
       title: formData.get("title") as string,
       slug: formData.get("slug") as string,
-      seoTitle: formData.get("seoTitle") as string,
-      seoDescription: formData.get("seoDescription") as string,
+      seoTitle: updatedOutput.seo.title,
+      seoDescription: updatedOutput.seo.description,
       outputJson: updatedOutput,
     });
 

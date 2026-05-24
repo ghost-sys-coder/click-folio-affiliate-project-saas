@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
-import { Loader2, Save, X, Video, Image as ImageIcon } from "lucide-react";
+import { Loader2, Save, X, Video, Image as ImageIcon, Type, Layout, List, HelpCircle, CheckCircle, AlertCircle, Repeat } from "lucide-react";
 import { toast } from "sonner";
 
 import { updateLandingPageAction, type LandingPageUpdateState } from "@/actions/landing-pages";
@@ -21,7 +21,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import type { GeneratedLandingPage } from "@/db/schema";
-import type { LandingPageOutput } from "@/lib/landing-pages";
+import type { LandingPageOutput, LandingPageSection } from "@/lib/landing-pages";
 import { LandingPageMediaUploader } from "./landing-page-media-uploader";
 
 type LandingPageEditorProps = {
@@ -35,9 +35,24 @@ export function LandingPageEditor({ landingPage }: LandingPageEditorProps) {
   });
 
   const output = landingPage.outputJson as LandingPageOutput;
+  const legacyData = output as any;
 
-  const [imageUrl, setImageUrl] = useState(output.hero.imageUrl || "");
-  const [videoUrl, setVideoUrl] = useState(output.hero.videoUrl || "");
+  const sections = output.sections || [
+    { type: "hero", content: legacyData.hero },
+    { type: "problem", content: legacyData.problem },
+    { type: "solution", content: legacyData.solution },
+    { type: "benefits", content: { title: "Why Choose This?", items: legacyData.benefits } },
+    { type: "productHighlights", content: { title: "Key Features", items: legacyData.productHighlights } },
+    { type: "audience", content: { 
+        perfectForTitle: "Perfect For", 
+        perfectForItems: legacyData.whoItIsFor,
+        notForTitle: "Not For You If",
+        notForItems: legacyData.whoItIsNotFor
+    } },
+    { type: "useCases", content: { title: "Real World Applications", items: legacyData.useCases } },
+    { type: "faq", content: { title: "Common Questions", items: legacyData.faq } },
+    { type: "finalCta", content: legacyData.finalCta },
+  ].filter(s => s.content);
 
   useEffect(() => {
     if (state.success) {
@@ -50,8 +65,6 @@ export function LandingPageEditor({ landingPage }: LandingPageEditorProps) {
   return (
     <form action={formAction} className="space-y-8 pb-10">
       <input type="hidden" name="id" value={landingPage.id} />
-      <input type="hidden" name="hero.imageUrl" value={imageUrl} />
-      <input type="hidden" name="hero.videoUrl" value={videoUrl} />
 
       <div className="flex items-center justify-between">
         <div>
@@ -130,290 +143,6 @@ export function LandingPageEditor({ landingPage }: LandingPageEditorProps) {
               </FieldGroup>
             </CardContent>
           </Card>
-        </div>
-
-        {/* Middle/Right: Content Editor */}
-        <div className="space-y-8 lg:col-span-2">
-          <Card className="border-border/60 shadow-sm">
-            <CardHeader className="bg-muted/30 pb-4 border-b border-border/40">
-              <CardTitle className="text-lg">Hero Section</CardTitle>
-              <CardDescription>The first thing visitors will see.</CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <FieldGroup>
-                <Field>
-                  <FieldLabel>Eyebrow (Optional)</FieldLabel>
-                  <Input
-                    name="hero.eyebrow"
-                    defaultValue={output.hero.eyebrow || ""}
-                    className="bg-background"
-                  />
-                </Field>
-                <Field>
-                  <FieldLabel>Headline</FieldLabel>
-                  <Input
-                    name="hero.headline"
-                    defaultValue={output.hero.headline}
-                    className="bg-background"
-                  />
-                </Field>
-                <Field>
-                  <FieldLabel>Subheadline</FieldLabel>
-                  <Textarea
-                    name="hero.subheadline"
-                    defaultValue={output.hero.subheadline}
-                    className="bg-background min-h-20 resize-none"
-                  />
-                </Field>
-                <Field>
-                  <FieldLabel>CTA Label</FieldLabel>
-                  <Input
-                    name="hero.ctaLabel"
-                    defaultValue={output.hero.ctaLabel}
-                    className="bg-background"
-                  />
-                </Field>
-
-                <div className="grid gap-6 pt-4 sm:grid-cols-2">
-                  <Field>
-                    <FieldLabel>Hero Image (Optional)</FieldLabel>
-                    <div className="flex flex-col gap-3">
-                      {imageUrl ? (
-                        <div className="group relative aspect-video w-full overflow-hidden rounded-lg border border-border bg-muted/30">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={imageUrl}
-                            alt="Hero preview"
-                            className="h-full w-full object-cover"
-                          />
-                          <Button
-                            type="button"
-                            className="absolute right-2 top-2 rounded-full bg-destructive p-1.5 text-white opacity-0 shadow-sm transition-opacity hover:bg-destructive/90 group-hover:opacity-100"
-                            onClick={() => setImageUrl("")}
-                          >
-                            <X className="size-4" />
-                          </Button>
-                        </div>
-                      ) : null}
-                      <div className="flex flex-col gap-2">
-                        <div className="flex items-center gap-2">
-                          <ImageIcon className="size-4 text-muted-foreground shrink-0" />
-                          <Input
-                            placeholder="Image URL"
-                            value={imageUrl}
-                            onChange={(e) => setImageUrl(e.target.value)}
-                            className="h-9 bg-background text-xs"
-                          />
-                        </div>
-                        <LandingPageMediaUploader
-                          type="image"
-                          onUpload={setImageUrl}
-                        />
-                      </div>
-                    </div>
-                  </Field>
-
-                  <Field>
-                    <FieldLabel>Hero Video (Optional)</FieldLabel>
-                    <div className="flex flex-col gap-3">
-                      {videoUrl ? (
-                        <div className="group relative aspect-video w-full overflow-hidden rounded-lg border border-border bg-muted/30">
-                          <video
-                            src={videoUrl}
-                            className="h-full w-full object-cover"
-                            controls
-                          />
-                          <Button
-                            type="button"
-                            className="absolute right-2 top-2 rounded-full bg-destructive p-1.5 text-white opacity-0 shadow-sm transition-opacity hover:bg-destructive/90 group-hover:opacity-100"
-                            onClick={() => setVideoUrl("")}
-                          >
-                            <X className="size-4" />
-                          </Button>
-                        </div>
-                      ) : null}
-                      <div className="flex flex-col gap-2">
-                        <div className="flex items-center gap-2">
-                          <Video className="size-4 text-muted-foreground shrink-0" />
-                          <Input
-                            placeholder="Video URL"
-                            value={videoUrl}
-                            onChange={(e) => setVideoUrl(e.target.value)}
-                            className="h-9 bg-background text-xs"
-                          />
-                        </div>
-                        <LandingPageMediaUploader
-                          type="video"
-                          onUpload={setVideoUrl}
-                        />
-                      </div>
-                    </div>
-                  </Field>
-                </div>
-              </FieldGroup>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border/60 shadow-sm">
-            <CardHeader className="bg-muted/30 pb-4 border-b border-border/40">
-              <CardTitle className="text-lg">Problem & Solution</CardTitle>
-              <CardDescription>Frame the challenge and how this product solves it.</CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <FieldGroup>
-                <h4 className="text-sm font-semibold text-primary uppercase tracking-wider">Problem</h4>
-                <Field>
-                  <FieldLabel>Problem Title</FieldLabel>
-                  <Input
-                    name="problem.title"
-                    defaultValue={output.problem.title}
-                    className="bg-background"
-                  />
-                </Field>
-                <Field>
-                  <FieldLabel>Problem Body</FieldLabel>
-                  <Textarea
-                    name="problem.body"
-                    defaultValue={output.problem.body}
-                    className="bg-background min-h-25 resize-none"
-                  />
-                </Field>
-                <Field>
-                  <FieldLabel>Pain Points (One per line)</FieldLabel>
-                  <Textarea
-                    name="problem.bullets"
-                    defaultValue={output.problem.bullets.join("\n")}
-                    className="bg-background min-h-25 resize-none"
-                  />
-                </Field>
-
-                <div className="h-4" />
-                <h4 className="text-sm font-semibold text-primary uppercase tracking-wider">Solution</h4>
-                <Field>
-                  <FieldLabel>Solution Title</FieldLabel>
-                  <Input
-                    name="solution.title"
-                    defaultValue={output.solution.title}
-                    className="bg-background"
-                  />
-                </Field>
-                <Field>
-                  <FieldLabel>Solution Body</FieldLabel>
-                  <Textarea
-                    name="solution.body"
-                    defaultValue={output.solution.body}
-                    className="bg-background min-h-25 resize-none"
-                  />
-                </Field>
-              </FieldGroup>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border/60 shadow-sm">
-            <CardHeader className="bg-muted/30 pb-4 border-b border-border/40">
-              <CardTitle className="text-lg">Benefits & Use Cases</CardTitle>
-              <CardDescription>Why it matters and where it applies.</CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <FieldGroup>
-                 <h4 className="text-sm font-semibold text-primary uppercase tracking-wider">Benefits</h4>
-                 <p className="text-[10px] text-muted-foreground mb-2 italic">Format: Title | Description (One per line)</p>
-                 <Textarea
-                    name="benefits"
-                    defaultValue={output.benefits.map(b => `${b.title} | ${b.description}`).join("\n")}
-                    className="bg-background min-h-30 resize-none text-sm"
-                 />
-
-                 <div className="h-4" />
-                 <h4 className="text-sm font-semibold text-primary uppercase tracking-wider">Use Cases</h4>
-                 <p className="text-[10px] text-muted-foreground mb-2 italic">Format: Title | Description (One per line)</p>
-                 <Textarea
-                    name="useCases"
-                    defaultValue={output.useCases.map(u => `${u.title} | ${u.description}`).join("\n")}
-                    className="bg-background min-h-30 resize-none text-sm"
-                 />
-              </FieldGroup>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border/60 shadow-sm">
-            <CardHeader className="bg-muted/30 pb-4 border-b border-border/40">
-              <CardTitle className="text-lg">Audience Targeting</CardTitle>
-              <CardDescription>Define who this product is for.</CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <FieldGroup>
-                <Field>
-                  <FieldLabel>Who It&apos;s For (One per line)</FieldLabel>
-                  <Textarea
-                    name="whoItIsFor"
-                    defaultValue={output.whoItIsFor.join("\n")}
-                    className="bg-background min-h-25 resize-none"
-                  />
-                </Field>
-                <Field>
-                  <FieldLabel>Who It&apos;s NOT For (One per line)</FieldLabel>
-                  <Textarea
-                    name="whoItIsNotFor"
-                    defaultValue={output.whoItIsNotFor.join("\n")}
-                    className="bg-background min-h-25 resize-none"
-                  />
-                </Field>
-              </FieldGroup>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border/60 shadow-sm">
-            <CardHeader className="bg-muted/30 pb-4 border-b border-border/40">
-              <CardTitle className="text-lg">FAQ Section</CardTitle>
-              <CardDescription>Answer common questions.</CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <FieldGroup>
-                <p className="text-[10px] text-muted-foreground mb-2 italic">Format: Question | Answer (One per line)</p>
-                <Textarea
-                  name="faq"
-                  defaultValue={output.faq.map(f => `${f.question} | ${f.answer}`).join("\n")}
-                  className="bg-background min-h-37.5 resize-none text-sm"
-                />
-              </FieldGroup>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border/60 shadow-sm">
-            <CardHeader className="bg-muted/30 pb-4 border-b border-border/40">
-              <CardTitle className="text-lg">Final Call to Action</CardTitle>
-              <CardDescription>Give them one last reason to click.</CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <FieldGroup>
-                <Field>
-                  <FieldLabel>Final Headline</FieldLabel>
-                  <Input
-                    name="finalCta.headline"
-                    defaultValue={output.finalCta.headline}
-                    className="bg-background"
-                  />
-                </Field>
-                <Field>
-                  <FieldLabel>Final Body</FieldLabel>
-                  <Textarea
-                    name="finalCta.body"
-                    defaultValue={output.finalCta.body}
-                    className="bg-background min-h-20 resize-none"
-                  />
-                </Field>
-                <Field>
-                  <FieldLabel>CTA Label</FieldLabel>
-                  <Input
-                    name="finalCta.ctaLabel"
-                    defaultValue={output.finalCta.ctaLabel}
-                    className="bg-background"
-                  />
-                </Field>
-              </FieldGroup>
-            </CardContent>
-          </Card>
 
           <Card className="border-border/60 shadow-sm">
             <CardHeader className="bg-muted/30 pb-4 border-b border-border/40">
@@ -434,7 +163,7 @@ export function LandingPageEditor({ landingPage }: LandingPageEditorProps) {
                   <FieldLabel>Risk Warnings (One per line)</FieldLabel>
                   <Textarea
                     name="riskWarnings"
-                    defaultValue={output.riskWarnings.join("\n")}
+                    defaultValue={output.riskWarnings?.join("\n") || ""}
                     className="bg-background min-h-25 resize-none text-xs"
                   />
                 </Field>
@@ -442,7 +171,143 @@ export function LandingPageEditor({ landingPage }: LandingPageEditorProps) {
             </CardContent>
           </Card>
         </div>
+
+        {/* Middle/Right: Dynamic Content Editor */}
+        <div className="space-y-8 lg:col-span-2">
+          {sections.map((section, index) => (
+            <SectionEditorItem 
+              key={`${section.type}-${index}`} 
+              section={section as any} 
+              index={index} 
+            />
+          ))}
+        </div>
       </div>
     </form>
+  );
+}
+
+function SectionEditorItem({ section, index }: { section: LandingPageSection; index: number }) {
+  const prefix = `section.${index}.`;
+  
+  const getIcon = () => {
+    switch (section.type) {
+      case "hero": return <Layout className="size-5 text-primary" />;
+      case "problem": return <AlertCircle className="size-5 text-destructive" />;
+      case "solution": return <CheckCircle className="size-5 text-green-500" />;
+      case "benefits": return <Sparkles className="size-5 text-primary" />;
+      case "useCases": return <Repeat className="size-5 text-primary" />;
+      case "productHighlights": return <List className="size-5 text-primary" />;
+      case "audience": return <Type className="size-5 text-primary" />;
+      case "comparison": return <Layout className="size-5 text-primary" />;
+      case "howItWorks": return <List className="size-5 text-primary" />;
+      case "faq": return <HelpCircle className="size-5 text-primary" />;
+      case "finalCta": return <Sparkles className="size-5 text-primary" />;
+      default: return <Type className="size-5 text-primary" />;
+    }
+  };
+
+  const getTitle = () => {
+    const type = section.type;
+    return type.charAt(0).toUpperCase() + type.slice(1).replace(/([A-Z])/g, ' $1');
+  };
+
+  return (
+    <Card className="border-border/60 shadow-sm">
+      <CardHeader className="bg-muted/30 pb-4 border-b border-border/40">
+        <div className="flex items-center gap-2">
+          {getIcon()}
+          <CardTitle className="text-lg">{getTitle()}</CardTitle>
+        </div>
+      </CardHeader>
+      <CardContent className="pt-6">
+        <div className="space-y-6">
+          {Object.entries(section.content).map(([key, value]) => {
+            if (key === "imageUrl" || key === "videoUrl") return null; // Handled separately if needed
+            
+            if (Array.isArray(value)) {
+              // Handle simple string arrays (bullets, items as strings)
+              if (value.length === 0 || typeof value[0] === "string") {
+                return (
+                  <Field key={key}>
+                    <FieldLabel className="capitalize">{key.replace(/([A-Z])/g, ' $1')}</FieldLabel>
+                    <Textarea
+                      name={`${prefix}${key}`}
+                      defaultValue={value.join("\n")}
+                      className="bg-background min-h-20 resize-none"
+                    />
+                  </Field>
+                );
+              }
+              // Complex arrays (items with title/description)
+              return (
+                <div key={key} className="space-y-2">
+                   <FieldLabel className="capitalize">{key.replace(/([A-Z])/g, ' $1')} (Read-only for now)</FieldLabel>
+                   <div className="p-4 rounded-lg bg-muted/50 text-xs text-muted-foreground italic border border-dashed border-border">
+                     Complex list items are currently non-editable in this view.
+                   </div>
+                </div>
+              );
+            }
+
+            if (typeof value === "string") {
+              const isLong = value.length > 100;
+              return (
+                <Field key={key}>
+                  <FieldLabel className="capitalize">{key.replace(/([A-Z])/g, ' $1')}</FieldLabel>
+                  {isLong ? (
+                    <Textarea
+                      name={`${prefix}${key}`}
+                      defaultValue={value}
+                      className="bg-background min-h-20 resize-none"
+                    />
+                  ) : (
+                    <Input
+                      name={`${prefix}${key}`}
+                      defaultValue={value}
+                      className="bg-background"
+                    />
+                  )}
+                </Field>
+              );
+            }
+
+            return null;
+          })}
+
+          {section.type === "hero" && (
+            <div className="grid gap-6 pt-4 sm:grid-cols-2">
+               {/* Simplified media display for hero */}
+               <div className="text-xs text-muted-foreground italic">
+                 Media assets are preserved but currently managed via the generator or JSON.
+               </div>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function Sparkles({ className }: { className?: string }) {
+  return (
+    <svg 
+      xmlns="http://www.w3.org/2000/svg" 
+      width="24" 
+      height="24" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="2" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      className={className}
+    >
+      <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+      <path d="M5 3v4"/>
+      <path d="M19 17v4"/>
+      <path d="M3 5h4"/>
+      <path d="M17 19h4"/>
+    </svg>
   );
 }
