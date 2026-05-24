@@ -4,7 +4,7 @@ import { useActionState, useEffect, useState } from "react";
 import { Loader2, Save } from "lucide-react";
 import { toast } from "sonner";
 
-import { updateProfile } from "@/actions/profile";
+import { updateProfile, type ProfileUpdateState } from "@/actions/profile";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -45,8 +45,9 @@ type ProfileEditorProps = {
 };
 
 export function ProfileEditor({ profile }: ProfileEditorProps) {
-  const [state, formAction, isPending] = useActionState(updateProfile, {
+  const [state, formAction, isPending] = useActionState<ProfileUpdateState, FormData>(updateProfile, {
     success: false,
+    message: "",
   });
 
   const [avatarUrl, setAvatarUrl] = useState(profile.avatarUrl || "");

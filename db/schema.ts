@@ -1,5 +1,4 @@
-import { profile } from "console";
-import { integer, text, boolean, pgTable, timestamp, uuid, numeric, json, jsonb, pgEnum } from "drizzle-orm/pg-core";
+import { integer, text, boolean, pgTable, timestamp, uuid, numeric, json, jsonb, pgEnum, uniqueIndex } from "drizzle-orm/pg-core";
 
 // create user table
 export const usersTable = pgTable("users", {
@@ -212,6 +211,7 @@ export const usageEventTypeEnum = pgEnum("usage_event_type", [
   "affiliate_link_created",
   "affiliate_link_imported",
   "campaign_url_generated",
+  "landing_page_generated",
 ]);
 
 export const usageEventsTable = pgTable("usage_events", {
@@ -255,22 +255,19 @@ export const generatedPostsTable = pgTable("generated_posts", {
 
 export type GeneratedPost = typeof generatedPostsTable.$inferSelect;
 
-
-
-// landing page generation table 
 export const landingPageStatusEnum = pgEnum("landing_page_status", [
     "draft",
     "published",
-    "archived"
+    "archived",
 ]);
 
-export const generatedLandingPagesTable = pgTable("landing_pages", {
+export const generatedLandingPagesTable = pgTable("generated_landing_pages", {
     id: uuid("id").primaryKey().defaultRandom(),
     userId: uuid("user_id").notNull().references(() => usersTable.id),
     profileId: uuid("profile_id").notNull().references(() => profilesTable.id),
     affiliateLinkId: uuid("affiliate_link_id").notNull().references(() => affiliateLinksTable.id),
+    slug: text("slug").notNull(),
     title: text("title").notNull(),
-    slug: text("slug").notNull().unique(),
     status: landingPageStatusEnum("status").notNull().default("draft"),
     theme: text("theme").notNull().default("growth-mint"),
     inputJson: jsonb("input_json").notNull(),
@@ -280,31 +277,8 @@ export const generatedLandingPagesTable = pgTable("landing_pages", {
     publishedAt: timestamp("published_at"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow()
-});
+}, (table) => [
+    uniqueIndex("profile_slug_idx").on(table.profileId, table.slug)
+]);
 
-
-export const landingPageVisitsTable = pgTable("landing_page_visits", {
-    id: uuid("id").primaryKey().defaultRandom(),
-    landingPageId: uuid("landing_page_id").notNull().references(() => generatedLandingPagesTable.id),
-    userId: uuid("user_id").references(() => usersTable.id),
-    profileId: uuid("profile_id").notNull().references(() => profilesTable.id),
-    affiliateLinkId: uuid("affiliate_link_id").notNull().references(() => affiliateLinksTable.id),
-    referer: text("referer"),
-    userAgent: text("user_agent"),
-    ipAddressHash: text("ip_address_hash"),
-    country: text("country"),
-    deviceType: text("device_type"),
-    browser: text("browser"),
-    os: text("os"),
-
-    source: text("source"),
-    medium: text("medium"),
-    campaign: text("campaign"),
-    content: text("content"),
-    term: text("term"),
-
-    viewedAt: timestamp("viewed_at").notNull().defaultNow(),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-    updatedAt: timestamp("updated_at").notNull().defaultNow()
-})
-
+export type GeneratedLandingPage = typeof generatedLandingPagesTable.$inferSelect;

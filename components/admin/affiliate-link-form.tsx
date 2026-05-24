@@ -49,7 +49,7 @@ export function AffiliateLinkForm({
   submitLabel,
   title,
 }: AffiliateLinkFormProps) {
-  const [state, formAction, pending] = useActionState(action, {
+  const [state, formAction, pending] = useActionState<AffiliateLinkFormState, FormData>(action, {
     values: initialValues,
   });
   const [values, setValues] = useState(initialValues);
