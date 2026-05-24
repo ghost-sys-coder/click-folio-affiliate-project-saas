@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import type { LucideIcon } from "lucide-react";
-import { Moon, Sprout } from "lucide-react";
+import { Coins, Moon, Sprout } from "lucide-react";
 
 import { appThemes, type AppTheme } from "@/lib/themes";
 

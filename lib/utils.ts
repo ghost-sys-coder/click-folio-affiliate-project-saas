@@ -20,3 +20,13 @@ export function getBaseUrl() {
 
   return "http://localhost:3000";
 }
+
+export function getRequestOrigin(requestHeaders: Headers) {
+  const host =
+    requestHeaders.get("x-forwarded-host") ??
+    requestHeaders.get("host") ??
+    "localhost:3000";
+  const proto = requestHeaders.get("x-forwarded-proto") ?? "http";
+
+  return `${proto}://${host}`;
+}

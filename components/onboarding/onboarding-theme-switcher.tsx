@@ -30,6 +30,12 @@ const onboardingThemeOptions = [
     description: "Dark, premium, high-contrast",
     icon: Moon,
   },
+  {
+    value: appThemes.commerceGold,
+    label: "Commerce Gold",
+    description: "Premium, ecommerce-focused",
+    icon: Coins,
+  },
 ] as const;
 
 export function OnboardingThemeSwitcher({

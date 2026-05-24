@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 
 import { CampaignUrlBuilder } from "@/components/admin/campaign-url-builder";
 import { getProfileByUserId, getUserByClerkUserId } from "@/db/profiles";
+import { getRequestOrigin } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -44,14 +45,4 @@ export default async function AdminCampaignsPage() {
       <CampaignUrlBuilder publicProfileUrl={publicProfileUrl} />
     </div>
   );
-}
-
-function getRequestOrigin(requestHeaders: Headers) {
-  const host =
-    requestHeaders.get("x-forwarded-host") ??
-    requestHeaders.get("host") ??
-    "localhost:3000";
-  const proto = requestHeaders.get("x-forwarded-proto") ?? "http";
-
-  return `${proto}://${host}`;
 }

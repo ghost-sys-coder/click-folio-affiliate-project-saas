@@ -131,6 +131,45 @@
   --sidebar-ring: #10b981;
 }
 
+[data-theme="commerce-gold"] {
+  color-scheme: dark;
+  --background: #0b0a07;
+  --foreground: #fff7ed;
+  --surface: #17130b;
+  --surface-soft: #241a0f;
+  --card: rgb(255 247 237 / 0.06);
+  --card-foreground: #fff7ed;
+  --popover: #17130b;
+  --popover-foreground: #fff7ed;
+  --primary: #f59e0b;
+  --primary-hover: #d97706;
+  --primary-foreground: #0b0a07;
+  --secondary: #7c3aed;
+  --secondary-foreground: #ffffff;
+  --muted: #241a0f;
+  --muted-foreground: #a8a29e;
+  --accent: #fde68a;
+  --accent-foreground: #17130b;
+  --destructive: #ef4444;
+  --border: rgb(253 230 138 / 0.16);
+  --input: rgb(253 230 138 / 0.2);
+  --ring: #fde68a;
+  --chart-1: #f59e0b;
+  --chart-2: #7c3aed;
+  --chart-3: #fde68a;
+  --chart-4: #d97706;
+  --chart-5: #fbbf24;
+  --radius: 0.625rem;
+  --sidebar: #17130b;
+  --sidebar-foreground: #fff7ed;
+  --sidebar-primary: #f59e0b;
+  --sidebar-primary-foreground: #0b0a07;
+  --sidebar-accent: #241a0f;
+  --sidebar-accent-foreground: #fff7ed;
+  --sidebar-border: rgb(253 230 138 / 0.16);
+  --sidebar-ring: #fde68a;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

@@ -1,4 +1,3 @@
-"use client";
 import { OverviewHeader } from "./overview-header";
 import { OverviewKPIGrid } from "./overview-kpi-grid";
 import { ProfileStatusCard } from "./profile-status-card";
@@ -8,7 +7,6 @@ import { RecommendedActions } from "./recommended-actions";
 import type { UserPlan } from "@/lib/subscriptions";
 import type { Profile } from "@/db/schema";
 import type { AnalyticsGroup, ClickSummary, RecentClick, TopLink } from "@/db/analytics";
-import { getBaseUrl } from "@/lib/utils";
 
 type OverviewDashboardProps = {
   profile: Profile;
@@ -23,6 +21,8 @@ type OverviewDashboardProps = {
     topSources: AnalyticsGroup[];
     recentClicks: RecentClick[];
   };
+  publicUrl: string;
+  referenceDate: Date;
 };
 
 export function OverviewDashboard({
@@ -30,10 +30,10 @@ export function OverviewDashboard({
   userPlan,
   usage,
   analytics,
+  publicUrl,
+  referenceDate,
 }: OverviewDashboardProps) {
-  const publicUrl = `${getBaseUrl()}/u/${profile.username}`;
   const hasUtmData = analytics.topSources.some(s => s.label !== "Direct or untagged");
-  const referenceDate = new Date();
 
   return (
     <div className="space-y-8 pb-10">
@@ -59,6 +59,7 @@ export function OverviewDashboard({
             contentGenerationsUsed={usage.monthlyContentGenerations}
             hasDisclosure={!!profile.disclosureText}
             userPlan={userPlan}
+            publicUrl={publicUrl}
             referenceDate={referenceDate}
           />
           

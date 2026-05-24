@@ -1,6 +1,7 @@
 export const appThemes = {
   signalPurple: "signal-purple",
   growthMint: "growth-mint",
+  commerceGold: "commerce-gold",
 } as const;
 
 export type AppTheme = (typeof appThemes)[keyof typeof appThemes];
@@ -8,6 +9,10 @@ export type AppTheme = (typeof appThemes)[keyof typeof appThemes];
 export function normalizeAppTheme(theme: string | null | undefined): AppTheme {
   if (theme === appThemes.signalPurple) {
     return appThemes.signalPurple;
+  }
+
+  if (theme === appThemes.commerceGold) {
+    return appThemes.commerceGold;
   }
 
   return appThemes.growthMint;

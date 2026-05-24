@@ -76,7 +76,6 @@ const PricingCard = ({ plan }: { plan: Plan }) => {
                         ? "bg-foreground text-background hover:bg-foreground/90"
                         : "bg-primary text-primary-foreground hover:bg-primary-hover"
                     }`}
-                onClick={handleSubscription}
                 disabled={isSubscribing}
             >
                 {isSubscribing ? "Processing..." : plan.cta}

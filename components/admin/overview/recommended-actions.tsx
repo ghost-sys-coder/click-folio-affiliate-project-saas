@@ -1,6 +1,9 @@
+"use client";
+
 import type { LucideIcon } from "lucide-react";
 import { ArrowRight, Lightbulb, Link2, Megaphone, ShieldCheck, Sparkles } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +16,7 @@ type RecommendedActionsProps = {
   contentGenerationsUsed: number;
   hasDisclosure: boolean;
   userPlan: UserPlan;
+  publicUrl: string;
   referenceDate?: Date;
 };
 
@@ -31,9 +35,16 @@ export function RecommendedActions({
   contentGenerationsUsed,
   hasDisclosure,
   userPlan,
+  publicUrl,
   referenceDate = new Date(),
 }: RecommendedActionsProps) {
   const actions: Action[] = [];
+
+  const copyPublicUrl = (e: React.MouseEvent) => {
+    e.preventDefault();
+    navigator.clipboard.writeText(publicUrl);
+    toast.success("Public profile URL copied to clipboard");
+  };
 
   if (activeLinksCount < 3) {
     actions.push({
@@ -125,12 +136,10 @@ export function RecommendedActions({
                   {action.description}
                 </p>
                 <Button asChild variant="link" className="h-auto p-0 text-xs justify-start font-bold">
-                  <Link href={action.href === "/admin" ? "#" : action.href} onClick={(e) => {
-                      if (action.href === "/admin") {
-                          e.preventDefault();
-                          // Handle copy in parent or just use as placeholder
-                      }
-                  }}>
+                  <Link 
+                    href={action.href === "/admin" ? "#" : action.href} 
+                    onClick={action.href === "/admin" ? copyPublicUrl : undefined}
+                  >
                     {action.label}
                     <ArrowRight className="ml-1 size-3" />
                   </Link>
@@ -143,3 +152,4 @@ export function RecommendedActions({
     </Card>
   );
 }
+

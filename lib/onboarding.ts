@@ -14,6 +14,7 @@ export const onboardingNiches = [
 export const onboardingProfileThemes = [
   { value: appThemes.growthMint, label: "Growth Mint" },
   { value: appThemes.signalPurple, label: "Signal Purple" },
+  { value: appThemes.commerceGold, label: "Commerce Gold" },
 ] as const;
 
 export const onboardingPlatforms = [

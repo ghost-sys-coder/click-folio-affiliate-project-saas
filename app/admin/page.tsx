@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { OverviewDashboard } from "@/components/admin/overview/overview-dashboard";
@@ -11,6 +12,7 @@ import {
 import { getProfileByUserId } from "@/db/profiles";
 import { getCurrentUserPlan } from "@/lib/subscriptions";
 import { getUsageSummary } from "@/lib/usage";
+import { getRequestOrigin } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -46,6 +48,10 @@ export default async function AdminOverviewPage() {
   };
 
   const historyDays = userPlan.limits.clickHistoryDays;
+  const requestHeaders = await headers();
+  const origin = getRequestOrigin(requestHeaders);
+  const publicUrl = `${origin}/u/${profile.username}`;
+  const referenceDate = new Date();
 
   const [usage, summary, topLinks, topSources, recentClicks] =
     await Promise.all([
@@ -68,6 +74,8 @@ export default async function AdminOverviewPage() {
           topSources,
           recentClicks,
         }}
+        publicUrl={publicUrl}
+        referenceDate={referenceDate}
       />
     </div>
   );
