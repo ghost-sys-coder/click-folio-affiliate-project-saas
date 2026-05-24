@@ -22,11 +22,30 @@ export async function updateLandingPageAction(prevState: LandingPageUpdateState,
   if (!existing) return { success: false, message: "Landing page not found." };
 
   const output = existing.outputJson as LandingPageOutput;
+  const legacyData = output as any;
+
+  // Ensure we have sections (backward compatibility)
+  const currentSections = output.sections || [
+    { type: "hero", content: legacyData.hero },
+    { type: "problem", content: legacyData.problem },
+    { type: "solution", content: legacyData.solution },
+    { type: "benefits", content: { title: "Why Choose This?", items: legacyData.benefits } },
+    { type: "productHighlights", content: { title: "Key Features", items: legacyData.productHighlights } },
+    { type: "audience", content: { 
+        perfectForTitle: "Perfect For", 
+        perfectForItems: legacyData.whoItIsFor,
+        notForTitle: "Not For You If",
+        notForItems: legacyData.whoItIsNotFor
+    } },
+    { type: "useCases", content: { title: "Real World Applications", items: legacyData.useCases } },
+    { type: "faq", content: { title: "Common Questions", items: legacyData.faq } },
+    { type: "finalCta", content: legacyData.finalCta },
+  ].filter(s => s.content);
 
   // Generic helper to update nested objects in sections
-  const updatedSections = [...output.sections].map((section, index) => {
+  const updatedSections = currentSections.map((section, index) => {
     const sectionPrefix = `section.${index}.`;
-    const newContent = { ...section.content };
+    const newContent = { ...section.content } as any;
 
     // Iterate through all keys in the current section's content
     Object.keys(newContent).forEach(key => {
@@ -38,8 +57,7 @@ export async function updateLandingPageAction(prevState: LandingPageUpdateState,
           newContent[key] = (formValue as string).split("\n").filter(Boolean);
         } else if (key === "items" || key === "rows" || key === "steps") {
           // These complex nested structures are harder to parse from flat FormData
-          // For now, we'll keep the existing values if not explicitly handled
-          // In a real app, you might use a JSON string for these or a more advanced parser
+          // preserved as is for now
         } else if (typeof newContent[key] === "boolean") {
           newContent[key] = formValue === "true";
         } else {
