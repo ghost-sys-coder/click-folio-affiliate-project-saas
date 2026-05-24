@@ -29,10 +29,20 @@ export const adminThemeOptions: AdminThemeOption[] = [
     description: "Dark workspace theme",
     icon: Moon,
   },
+  {
+    value: appThemes.commerceGold,
+    label: "Commerce Gold",
+    description: "Premium gold theme",
+    icon: Coins,
+  },
 ];
 
 function isAdminTheme(value: string | null): value is AppTheme {
-  return value === appThemes.growthMint || value === appThemes.signalPurple;
+  return (
+    value === appThemes.growthMint ||
+    value === appThemes.signalPurple ||
+    value === appThemes.commerceGold
+  );
 }
 
 function getStoredAdminTheme() {

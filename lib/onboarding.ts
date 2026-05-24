@@ -205,6 +205,10 @@ function normalizeTheme(value: string): AppTheme {
     return appThemes.signalPurple;
   }
 
+  if (value === appThemes.commerceGold) {
+    return appThemes.commerceGold;
+  }
+
   return appThemes.growthMint;
 }
 
