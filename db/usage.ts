@@ -4,7 +4,7 @@ import { usageEventsTable } from "@/db/schema";
 
 export async function recordUsageEvent(input: {
   userId: string;
-  eventType: "content_generation" | "affiliate_link_created" | "affiliate_link_imported" | "campaign_url_generated";
+  eventType: "content_generation" | "affiliate_link_created" | "affiliate_link_imported" | "campaign_url_generated" | "landing_page_generated";
   metadata?: Record<string, unknown>;
 }) {
   return getDb()

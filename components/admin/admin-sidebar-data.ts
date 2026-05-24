@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   Link2,
   Megaphone,
+  MonitorPlay,
   Settings,
   Sparkles,
 } from "lucide-react";
@@ -50,6 +51,12 @@ export const adminNavSections: AdminNavSection[] = [
         title: "Content Studio",
         href: "/admin/content",
         icon: Sparkles,
+      },
+      {
+        title: "Landing Pages",
+        href: "/admin/landing-pages",
+        icon: MonitorPlay,
+        badge: "New",
       },
     ],
   },

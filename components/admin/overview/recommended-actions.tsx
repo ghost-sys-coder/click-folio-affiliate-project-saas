@@ -84,6 +84,14 @@ export function RecommendedActions({
     });
   }
 
+  actions.push({
+    title: "Build landing pages",
+    description: "Create dedicated high-converting landing pages for your individual affiliate products.",
+    icon: Megaphone,
+    href: "/admin/generator",
+    label: "Launch Builder",
+  });
+
   if (!hasDisclosure) {
     actions.push({
       title: "Update disclosure",
