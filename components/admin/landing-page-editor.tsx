@@ -1,7 +1,7 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
-import { Loader2, Save } from "lucide-react";
+import { useActionState, useEffect, useState } from "react";
+import { Loader2, Save, X, Video, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 
 import { updateLandingPageAction, type LandingPageUpdateState } from "@/actions/landing-pages";
@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import type { GeneratedLandingPage } from "@/db/schema";
 import type { LandingPageOutput } from "@/lib/landing-pages";
+import { LandingPageMediaUploader } from "./landing-page-media-uploader";
 
 type LandingPageEditorProps = {
   landingPage: GeneratedLandingPage;
@@ -35,6 +36,9 @@ export function LandingPageEditor({ landingPage }: LandingPageEditorProps) {
 
   const output = landingPage.outputJson as LandingPageOutput;
 
+  const [imageUrl, setImageUrl] = useState(output.hero.imageUrl || "");
+  const [videoUrl, setVideoUrl] = useState(output.hero.videoUrl || "");
+
   useEffect(() => {
     if (state.success) {
       toast.success(state.message || "Landing page updated.");
@@ -46,6 +50,8 @@ export function LandingPageEditor({ landingPage }: LandingPageEditorProps) {
   return (
     <form action={formAction} className="space-y-8 pb-10">
       <input type="hidden" name="id" value={landingPage.id} />
+      <input type="hidden" name="hero.imageUrl" value={imageUrl} />
+      <input type="hidden" name="hero.videoUrl" value={videoUrl} />
 
       <div className="flex items-center justify-between">
         <div>
@@ -167,6 +173,83 @@ export function LandingPageEditor({ landingPage }: LandingPageEditorProps) {
                     className="bg-background"
                   />
                 </Field>
+
+                <div className="grid gap-6 pt-4 sm:grid-cols-2">
+                  <Field>
+                    <FieldLabel>Hero Image (Optional)</FieldLabel>
+                    <div className="flex flex-col gap-3">
+                      {imageUrl ? (
+                        <div className="group relative aspect-video w-full overflow-hidden rounded-lg border border-border bg-muted/30">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={imageUrl}
+                            alt="Hero preview"
+                            className="h-full w-full object-cover"
+                          />
+                          <Button
+                            type="button"
+                            className="absolute right-2 top-2 rounded-full bg-destructive p-1.5 text-white opacity-0 shadow-sm transition-opacity hover:bg-destructive/90 group-hover:opacity-100"
+                            onClick={() => setImageUrl("")}
+                          >
+                            <X className="size-4" />
+                          </Button>
+                        </div>
+                      ) : null}
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-2">
+                          <ImageIcon className="size-4 text-muted-foreground shrink-0" />
+                          <Input
+                            placeholder="Image URL"
+                            value={imageUrl}
+                            onChange={(e) => setImageUrl(e.target.value)}
+                            className="h-9 bg-background text-xs"
+                          />
+                        </div>
+                        <LandingPageMediaUploader
+                          type="image"
+                          onUpload={setImageUrl}
+                        />
+                      </div>
+                    </div>
+                  </Field>
+
+                  <Field>
+                    <FieldLabel>Hero Video (Optional)</FieldLabel>
+                    <div className="flex flex-col gap-3">
+                      {videoUrl ? (
+                        <div className="group relative aspect-video w-full overflow-hidden rounded-lg border border-border bg-muted/30">
+                          <video
+                            src={videoUrl}
+                            className="h-full w-full object-cover"
+                            controls
+                          />
+                          <Button
+                            type="button"
+                            className="absolute right-2 top-2 rounded-full bg-destructive p-1.5 text-white opacity-0 shadow-sm transition-opacity hover:bg-destructive/90 group-hover:opacity-100"
+                            onClick={() => setVideoUrl("")}
+                          >
+                            <X className="size-4" />
+                          </Button>
+                        </div>
+                      ) : null}
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-2">
+                          <Video className="size-4 text-muted-foreground shrink-0" />
+                          <Input
+                            placeholder="Video URL"
+                            value={videoUrl}
+                            onChange={(e) => setVideoUrl(e.target.value)}
+                            className="h-9 bg-background text-xs"
+                          />
+                        </div>
+                        <LandingPageMediaUploader
+                          type="video"
+                          onUpload={setVideoUrl}
+                        />
+                      </div>
+                    </div>
+                  </Field>
+                </div>
               </FieldGroup>
             </CardContent>
           </Card>

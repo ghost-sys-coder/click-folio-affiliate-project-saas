@@ -4,7 +4,7 @@ export type CloudinaryUploadResult = {
   secureUrl: string;
 };
 
-export async function uploadImageToCloudinary(
+export async function uploadFileToCloudinary(
   file: File,
   signature: CloudinaryUploadSignature
 ): Promise<CloudinaryUploadResult> {
@@ -17,8 +17,10 @@ export async function uploadImageToCloudinary(
   formData.set("folder", signature.folder);
   formData.set("upload_preset", signature.uploadPreset);
 
+  const resourceType = file.type.startsWith("video/") ? "video" : "image";
+
   const response = await fetch(
-    `https://api.cloudinary.com/v1_1/${signature.cloudName}/image/upload`,
+    `https://api.cloudinary.com/v1_1/${signature.cloudName}/${resourceType}/upload`,
     {
       method: "POST",
       body: formData,
@@ -26,16 +28,27 @@ export async function uploadImageToCloudinary(
   );
 
   if (!response.ok) {
-    throw new Error("Cloudinary upload failed.");
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error?.message || "Cloudinary upload failed.");
   }
 
   const payload = (await response.json()) as { secure_url?: string };
 
   if (!payload.secure_url) {
-    throw new Error("Cloudinary did not return an image URL.");
+    throw new Error(`Cloudinary did not return a ${resourceType} URL.`);
   }
 
   return {
     secureUrl: payload.secure_url,
   };
+}
+
+/**
+ * @deprecated Use uploadFileToCloudinary instead
+ */
+export async function uploadImageToCloudinary(
+  file: File,
+  signature: CloudinaryUploadSignature
+): Promise<CloudinaryUploadResult> {
+  return uploadFileToCloudinary(file, signature);
 }

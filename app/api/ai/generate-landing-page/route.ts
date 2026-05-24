@@ -94,7 +94,14 @@ export async function POST(request: Request) {
       title: result.output.hero.headline,
       theme: validation.data.theme,
       inputJson: validation.data,
-      outputJson: result.output,
+      outputJson: {
+        ...result.output,
+        hero: {
+          ...result.output.hero,
+          imageUrl: validation.data.imageUrl || undefined,
+          videoUrl: validation.data.videoUrl || undefined,
+        },
+      },
       seoTitle: result.output.seo.title,
       seoDescription: result.output.seo.description,
     });

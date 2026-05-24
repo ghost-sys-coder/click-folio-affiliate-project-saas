@@ -47,6 +47,8 @@ export const landingPageGenerationSchema = z.object({
     .trim()
     .max(500, "Avoid claims list must be 500 characters or fewer.")
     .optional(),
+  imageUrl: z.string().trim().optional(),
+  videoUrl: z.string().trim().optional(),
 });
 
 export type LandingPageGenerationInput = z.infer<typeof landingPageGenerationSchema>;
@@ -63,6 +65,8 @@ export const landingPageOutputSchema = z.object({
     subheadline: z.string().trim().min(1),
     eyebrow: z.string().trim().optional(),
     ctaLabel: z.string().trim().min(1),
+    imageUrl: z.string().trim().optional(),
+    videoUrl: z.string().trim().optional(),
   }),
   problem: z.object({
     title: z.string().trim().min(1),

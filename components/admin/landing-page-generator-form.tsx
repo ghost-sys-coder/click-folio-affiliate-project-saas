@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertCircle, Loader2, Sparkles } from "lucide-react";
+import { AlertCircle, Loader2, Sparkles, X, Image as ImageIcon, Video } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -37,6 +37,7 @@ import {
 } from "@/lib/landing-pages";
 import type { AffiliateLink } from "@/db/schema";
 import { appThemes } from "@/lib/themes";
+import { LandingPageMediaUploader } from "./landing-page-media-uploader";
 
 type LandingPageGeneratorFormProps = {
   affiliateLinks: AffiliateLink[];
@@ -56,6 +57,8 @@ export function LandingPageGeneratorForm({
     theme: "growth-mint",
     extraContext: "",
     avoidClaims: "",
+    imageUrl: "",
+    videoUrl: "",
   });
 
   const selectedLink = affiliateLinks.find((l) => l.id === formData.linkId);
@@ -258,6 +261,91 @@ export function LandingPageGeneratorForm({
                   />
                   <FieldDescription>Ensure compliance by restricting certain types of claims.</FieldDescription>
                 </Field>
+
+                <div className="pt-4 border-t border-border/40">
+                   <h4 className="text-sm font-semibold mb-4 flex items-center gap-2">
+                     Hero Media <span className="text-[10px] font-normal text-muted-foreground uppercase tracking-widest">(Optional)</span>
+                   </h4>
+                   <div className="grid gap-6 sm:grid-cols-2">
+                     <Field>
+                       <FieldLabel>Hero Image</FieldLabel>
+                       <div className="flex flex-col gap-3">
+                         {formData.imageUrl ? (
+                           <div className="group relative aspect-video w-full overflow-hidden rounded-lg border border-border bg-muted/30">
+                             {/* eslint-disable-next-line @next/next/no-img-element */}
+                             <img
+                               src={formData.imageUrl}
+                               alt="Hero preview"
+                               className="h-full w-full object-cover"
+                             />
+                             <Button
+                               type="button"
+                               className="absolute right-2 top-2 rounded-full bg-destructive p-1.5 text-white opacity-0 shadow-sm transition-opacity hover:bg-destructive/90 group-hover:opacity-100"
+                               onClick={() => setFormData({ ...formData, imageUrl: "" })}
+                             >
+                               <X className="size-4" />
+                             </Button>
+                           </div>
+                         ) : null}
+                         <div className="flex flex-col gap-2">
+                           <div className="flex items-center gap-2">
+                             <ImageIcon className="size-4 text-muted-foreground shrink-0" />
+                             <Input
+                               placeholder="Image URL"
+                               value={formData.imageUrl}
+                               onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                               className="h-9 bg-background text-xs"
+                             />
+                           </div>
+                           <LandingPageMediaUploader
+                             type="image"
+                             onUpload={(url) => setFormData({ ...formData, imageUrl: url })}
+                           />
+                         </div>
+                       </div>
+                     </Field>
+
+                     <Field>
+                       <FieldLabel>Hero Video</FieldLabel>
+                       <div className="flex flex-col gap-3">
+                         {formData.videoUrl ? (
+                           <div className="group relative aspect-video w-full overflow-hidden rounded-lg border border-border bg-muted/30">
+                             <video
+                               src={formData.videoUrl}
+                               className="h-full w-full object-cover"
+                               controls
+                             />
+                             <Button
+                               type="button"
+                               className="absolute right-2 top-2 rounded-full bg-destructive p-1.5 text-white opacity-0 shadow-sm transition-opacity hover:bg-destructive/90 group-hover:opacity-100"
+                               onClick={() => setFormData({ ...formData, videoUrl: "" })}
+                             >
+                               <X className="size-4" />
+                             </Button>
+                           </div>
+                         ) : null}
+                         <div className="flex flex-col gap-2">
+                           <div className="flex items-center gap-2">
+                             <Video className="size-4 text-muted-foreground shrink-0" />
+                             <Input
+                               placeholder="Video URL"
+                               value={formData.videoUrl}
+                               onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
+                               className="h-9 bg-background text-xs"
+                             />
+                           </div>
+                           <LandingPageMediaUploader
+                             type="video"
+                             onUpload={(url) => setFormData({ ...formData, videoUrl: url })}
+                           />
+                         </div>
+                       </div>
+                     </Field>
+                   </div>
+                   <p className="mt-4 text-[10px] text-muted-foreground leading-relaxed italic">
+                     These media assets will be used in the top hero section of your landing page. If you leave them blank, you can still add them later in the editor.
+                   </p>
+                </div>
               </FieldGroup>
             </CardContent>
           </Card>

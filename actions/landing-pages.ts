@@ -52,6 +52,8 @@ export async function updateLandingPageAction(prevState: LandingPageUpdateState,
       headline: formData.get("hero.headline") as string,
       subheadline: formData.get("hero.subheadline") as string,
       ctaLabel: formData.get("hero.ctaLabel") as string,
+      imageUrl: (formData.get("hero.imageUrl") as string) || undefined,
+      videoUrl: (formData.get("hero.videoUrl") as string) || undefined,
     },
     problem: {
       ...output.problem,
