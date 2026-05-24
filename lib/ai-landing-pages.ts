@@ -112,6 +112,10 @@ function buildLandingPagePrompt(input: {
       link.description ? `- Description: ${link.description}` : null,
       `- Destination Host: ${new URL(link.destinationUrl).host}`,
       "",
+      "Uploaded Media (optional):",
+      request.imageUrl ? `- Hero Image URL: ${request.imageUrl}` : null,
+      request.videoUrl ? `- Hero Video URL: ${request.videoUrl}` : null,
+      "",
       "Generation Settings:",
       `- Target Audience: ${request.audience === "Use profile audience" ? profile.targetAudience : request.audience}`,
       request.customAudience ? `- Custom Audience Detail: ${request.customAudience}` : null,
@@ -126,7 +130,8 @@ function buildLandingPagePrompt(input: {
       "3. Ensure the copy is conversion-focused but transparent.",
       "4. Include mandatory affiliate disclosure.",
       "5. If product data is weak, include a risk warning section.",
-      "6. Return structured JSON matching the requested schema.",
+      "6. Use the provided Uploaded Media URLs in the hero section if they are present. If both image and video are provided, you can use both or prioritize the one that fits your copy best.",
+      "7. Return structured JSON matching the requested schema.",
     ]
       .filter(Boolean)
       .join("\n"),

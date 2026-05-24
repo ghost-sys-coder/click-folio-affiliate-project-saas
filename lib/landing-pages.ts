@@ -142,6 +142,8 @@ export function getLandingPageJsonSchema() {
           subheadline: { type: "string" },
           eyebrow: { type: "string" },
           ctaLabel: { type: "string" },
+          imageUrl: { type: "string" },
+          videoUrl: { type: "string" },
         },
       },
       problem: {

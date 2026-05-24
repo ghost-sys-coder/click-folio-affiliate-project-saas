@@ -29,24 +29,51 @@ export function LandingPageRenderer({
 
       {/* Hero Section */}
       <section className="relative pt-20 pb-16 md:pt-32 md:pb-24 overflow-hidden border-b border-border/40 bg-linear-to-b from-muted/50 to-background">
-        <div className="container px-4 mx-auto relative z-10 text-center">
-          {data.hero.eyebrow && (
-            <span className="inline-block px-3 py-1 mb-6 text-xs font-bold tracking-widest uppercase rounded-full bg-primary/10 text-primary">
-              {data.hero.eyebrow}
-            </span>
-          )}
-          <h1 className="mb-6 text-4xl md:text-6xl font-extrabold tracking-tight leading-tight max-w-4xl mx-auto">
-            {data.hero.headline}
-          </h1>
-          <p className="mb-10 text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            {data.hero.subheadline}
-          </p>
-          <Button asChild size="lg" className="h-14 px-8 text-md font-bold shadow-xl shadow-primary/20">
-            <Link href={ctaHref}>
-              {data.hero.ctaLabel}
-              <ArrowRight className="ml-2 size-5" />
-            </Link>
-          </Button>
+        <div className="container px-4 mx-auto relative z-10">
+          <div className={`flex flex-col ${data.hero.imageUrl || data.hero.videoUrl ? "lg:flex-row lg:items-center lg:text-left" : "text-center"} gap-12`}>
+            <div className={`${data.hero.imageUrl || data.hero.videoUrl ? "lg:w-1/2" : "max-w-4xl mx-auto"}`}>
+              {data.hero.eyebrow && (
+                <span className="inline-block px-3 py-1 mb-6 text-xs font-bold tracking-widest uppercase rounded-full bg-primary/10 text-primary">
+                  {data.hero.eyebrow}
+                </span>
+              )}
+              <h1 className="mb-6 text-4xl md:text-6xl font-extrabold tracking-tight leading-tight">
+                {data.hero.headline}
+              </h1>
+              <p className="mb-10 text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto lg:mx-0">
+                {data.hero.subheadline}
+              </p>
+              <Button asChild size="lg" className="h-14 px-8 text-md font-bold shadow-xl shadow-primary/20">
+                <Link href={ctaHref}>
+                  {data.hero.ctaLabel}
+                  <ArrowRight className="ml-2 size-5" />
+                </Link>
+              </Button>
+            </div>
+
+            {(data.hero.imageUrl || data.hero.videoUrl) && (
+              <div className="lg:w-1/2 flex justify-center">
+                <div className="relative w-full aspect-video rounded-3xl overflow-hidden shadow-2xl border border-border bg-muted/30 group">
+                  {data.hero.videoUrl ? (
+                    <video
+                      src={data.hero.videoUrl}
+                      className="w-full h-full object-cover"
+                      controls
+                      autoPlay
+                      muted
+                      loop
+                    />
+                  ) : data.hero.imageUrl ? (
+                    <img
+                      src={data.hero.imageUrl}
+                      alt={data.hero.headline}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                  ) : null}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </section>
 
