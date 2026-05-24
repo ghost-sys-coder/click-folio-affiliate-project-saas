@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Moon, Palette, Sprout } from "lucide-react";
+import { Check, Moon, Palette, Sprout, Coins } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {

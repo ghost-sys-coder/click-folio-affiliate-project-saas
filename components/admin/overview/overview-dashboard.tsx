@@ -10,6 +10,7 @@ import type { AnalyticsGroup, ClickSummary, RecentClick, TopLink } from "@/db/an
 
 type OverviewDashboardProps = {
   profile: Profile;
+  userEmail: string;
   userPlan: UserPlan;
   usage: {
     monthlyContentGenerations: number;
@@ -27,6 +28,7 @@ type OverviewDashboardProps = {
 
 export function OverviewDashboard({
   profile,
+  userEmail,
   userPlan,
   usage,
   analytics,
@@ -39,6 +41,7 @@ export function OverviewDashboard({
     <div className="space-y-8 pb-10">
       <OverviewHeader 
         displayName={profile.displayName} 
+        userEmail={userEmail}
         publicUrl={publicUrl} 
         planLabel={userPlan.limits.label}
       />

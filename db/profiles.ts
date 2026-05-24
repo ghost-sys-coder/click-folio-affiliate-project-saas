@@ -4,6 +4,16 @@ import { getDb } from "@/db/drizzle";
 import { profilesTable, usersTable } from "@/db/schema";
 import type { AppTheme } from "@/lib/themes";
 
+export async function getUserById(id: string) {
+  const [user] = await getDb()
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.id, id))
+    .limit(1);
+
+  return user ?? null;
+}
+
 export async function getUserByClerkUserId(clerkUserId: string) {
   const [user] = await getDb()
     .select({

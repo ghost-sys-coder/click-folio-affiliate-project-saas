@@ -8,12 +8,14 @@ import { Button } from "@/components/ui/button";
 
 type OverviewHeaderProps = {
   displayName: string;
+  userEmail: string;
   publicUrl: string;
   planLabel: string;
 };
 
 export function OverviewHeader({
   displayName,
+  userEmail,
   publicUrl,
   planLabel,
 }: OverviewHeaderProps) {
@@ -26,9 +28,13 @@ export function OverviewHeader({
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Welcome back, {displayName}</h1>
-        <p className="text-muted-foreground">
-          You are currently on the <span className="font-medium text-foreground">{planLabel}</span> plan.
-        </p>
+        <div className="flex items-center gap-2 text-muted-foreground mt-1">
+          <span className="text-sm">{userEmail}</span>
+          <span className="text-muted-foreground/40">•</span>
+          <p className="text-sm">
+            Current plan: <span className="font-medium text-foreground">{planLabel}</span>
+          </p>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2">

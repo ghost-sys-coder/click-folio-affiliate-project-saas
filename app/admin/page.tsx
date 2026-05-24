@@ -9,7 +9,7 @@ import {
   getTopLinks,
   getTopSources,
 } from "@/db/analytics";
-import { getProfileByUserId } from "@/db/profiles";
+import { getProfileByUserId, getUserById } from "@/db/profiles";
 import { getCurrentUserPlan } from "@/lib/subscriptions";
 import { getUsageSummary } from "@/lib/usage";
 import { getRequestOrigin } from "@/lib/utils";
@@ -36,9 +36,12 @@ export default async function AdminOverviewPage() {
   }
 
   const userPlan = planResult.plan;
-  const profile = await getProfileByUserId(userPlan.userId);
+  const [profile, user] = await Promise.all([
+    getProfileByUserId(userPlan.userId),
+    getUserById(userPlan.userId),
+  ]);
 
-  if (!profile) {
+  if (!profile || !user) {
     redirect("/onboarding");
   }
 
@@ -66,6 +69,7 @@ export default async function AdminOverviewPage() {
     <div className="mx-auto max-w-6xl">
       <OverviewDashboard
         profile={profile}
+        userEmail={user.email}
         userPlan={userPlan}
         usage={usage}
         analytics={{
