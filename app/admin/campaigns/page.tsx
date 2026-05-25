@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { CampaignUrlBuilder } from "@/components/admin/campaign-url-builder";
+import { getSavedCampaignSummaries } from "@/db/campaigns";
 import { getProfileByUserId, getUserByClerkUserId } from "@/db/profiles";
 import { getRequestOrigin } from "@/lib/utils";
 
@@ -29,6 +30,10 @@ export default async function AdminCampaignsPage() {
 
   const requestHeaders = await headers();
   const publicProfileUrl = `${getRequestOrigin(requestHeaders)}/u/${profile.username}`;
+  const savedCampaigns = await getSavedCampaignSummaries({
+    userId: user.id,
+    profileId: profile.id,
+  });
 
   return (
     <div className="mx-auto grid w-full max-w-6xl gap-5">
@@ -42,7 +47,10 @@ export default async function AdminCampaignsPage() {
         </p>
       </div>
 
-      <CampaignUrlBuilder publicProfileUrl={publicProfileUrl} />
+      <CampaignUrlBuilder
+        publicProfileUrl={publicProfileUrl}
+        savedCampaigns={savedCampaigns}
+      />
     </div>
   );
 }

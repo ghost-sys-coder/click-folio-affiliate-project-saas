@@ -12,6 +12,7 @@ import type {
   RecentClick,
   TopLink,
 } from "@/db/analytics";
+import type { SavedCampaignSummary } from "@/db/campaigns";
 import type { AnalyticsLevel } from "@/lib/plans";
 
 export function AnalyticsDashboard({
@@ -20,6 +21,7 @@ export function AnalyticsDashboard({
   topSources,
   topMediums,
   topCampaigns,
+  savedCampaigns,
   recentClicks,
   deviceBreakdown,
   countryBreakdown,
@@ -30,6 +32,7 @@ export function AnalyticsDashboard({
   topSources: AnalyticsGroup[];
   topMediums: AnalyticsGroup[];
   topCampaigns: AnalyticsGroup[];
+  savedCampaigns: SavedCampaignSummary[];
   recentClicks: RecentClick[];
   deviceBreakdown: AnalyticsGroup[];
   countryBreakdown: AnalyticsGroup[];
@@ -70,7 +73,7 @@ export function AnalyticsDashboard({
           />
           <AnalyticsBreakdownCard
             title="Top campaigns"
-            description="Campaign names from UTM tracking."
+            description="Saved campaign URLs tracked by campaign name."
             rows={topCampaigns}
             icon={<Megaphone className="size-4" />}
           />
@@ -104,6 +107,36 @@ export function AnalyticsDashboard({
           description="Understand your audience better by seeing which devices they use and where in the world they are located."
           plan="Creator Plus"
         />
+      ) : null}
+
+      {isAdvanced && savedCampaigns.length > 0 ? (
+        <div className="rounded-xl border border-border/70 bg-card p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-sm font-semibold">Saved campaign tracking</h2>
+              <p className="text-xs text-muted-foreground">
+                Campaigns you have saved from the builder, matched by source, medium, and campaign name.
+              </p>
+            </div>
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {savedCampaigns.map((campaign) => (
+              <div key={campaign.id} className="rounded-lg border bg-muted/20 p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold">{campaign.name}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {campaign.source} • {campaign.medium}
+                    </p>
+                  </div>
+                  <div className="rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
+                    {campaign.clicks.toLocaleString()} clicks
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       ) : null}
 
       <RecentClicksTable clicks={recentClicks} />

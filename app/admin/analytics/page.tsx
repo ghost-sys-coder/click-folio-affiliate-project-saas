@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { AnalyticsDashboard } from "@/components/admin/analytics/analytics-dashboard";
+import { getSavedCampaignSummaries } from "@/db/campaigns";
 import {
   getClickSummary,
   getCountryBreakdown,
@@ -21,7 +22,7 @@ const AnalyticsPage = async () => {
 
   if (!planResult.ok) {
     return (
-        <div className="flex flex-col items-center justify-center min-h-[400px] border border-dashed rounded-xl bg-muted/20">
+        <div className="flex flex-col items-center justify-center min-h-100 border border-dashed rounded-xl bg-muted/20">
             <h2 className="text-lg font-semibold">Database setup required</h2>
             <p className="text-muted-foreground text-sm mt-1">Run migrations to enable analytics.</p>
         </div>
@@ -48,20 +49,28 @@ const AnalyticsPage = async () => {
     topLinks,
     topSources,
     topMediums,
-    topCampaigns,
     recentClicks,
     deviceBreakdown,
     countryBreakdown,
+    savedCampaigns,
   ] = await Promise.all([
     getClickSummary(workspace, historyDays),
     getTopLinks(workspace, 5, historyDays),
     getTopSources(workspace, 5, historyDays),
     getTopMediums(workspace, 5, historyDays),
-    getTopCampaigns(workspace, 5, historyDays),
     getRecentClicks(workspace, 10, historyDays),
     getDeviceBreakdown(workspace, 5, historyDays),
     getCountryBreakdown(workspace, 5, historyDays),
+    getSavedCampaignSummaries(workspace, 5, historyDays),
   ]);
+
+  const topCampaigns =
+    savedCampaigns.length > 0
+      ? savedCampaigns.map((campaign) => ({
+          label: campaign.name,
+          clicks: campaign.clicks,
+        }))
+      : await getTopCampaigns(workspace, 5, historyDays);
 
   return (
     <AnalyticsDashboard
@@ -70,6 +79,7 @@ const AnalyticsPage = async () => {
       topSources={topSources}
       topMediums={topMediums}
       topCampaigns={topCampaigns}
+      savedCampaigns={savedCampaigns}
       recentClicks={recentClicks}
       deviceBreakdown={deviceBreakdown}
       countryBreakdown={countryBreakdown}

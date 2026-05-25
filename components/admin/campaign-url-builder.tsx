@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
-import { Check, Copy, RotateCcw, WandSparkles } from "lucide-react";
-import type { ZodIssue } from "zod";
+import { useActionState, useState } from "react";
+import { BarChart3, Check, Copy, RotateCcw, WandSparkles } from "lucide-react";
 
+import { saveCampaignUrl, type CampaignBuilderState } from "@/actions/campaigns";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -22,13 +22,14 @@ import {
 import { Input } from "@/components/ui/input";
 import {
   buildCampaignUrl,
-  campaignUrlInputSchema,
   suggestedMediums,
   suggestedSources,
 } from "@/lib/campaign-url";
+import type { SavedCampaignSummary } from "@/db/campaigns";
 
 type CampaignUrlBuilderProps = {
   publicProfileUrl: string;
+  savedCampaigns: SavedCampaignSummary[];
 };
 
 type CampaignFormState = {
@@ -39,9 +40,7 @@ type CampaignFormState = {
   term: string;
 };
 
-type FieldErrors = Partial<Record<keyof CampaignFormState, string>>;
-
-const initialFormState: CampaignFormState = {
+const initialFormValues: CampaignFormState = {
   source: "",
   medium: "",
   campaign: "",
@@ -49,41 +48,41 @@ const initialFormState: CampaignFormState = {
   term: "",
 };
 
+const initialState: CampaignBuilderState = {
+  values: initialFormValues,
+};
+
 export function CampaignUrlBuilder({
   publicProfileUrl,
+  savedCampaigns: initialSavedCampaigns,
 }: CampaignUrlBuilderProps) {
-  const [form, setForm] = useState<CampaignFormState>(initialFormState);
-  const [errors, setErrors] = useState<FieldErrors>({});
-  const [generatedUrl, setGeneratedUrl] = useState("");
+  const [state, formAction, pending] = useActionState<CampaignBuilderState, FormData>(
+    saveCampaignUrl,
+    initialState
+  );
+  const [form, setForm] = useState<CampaignFormState>(initialFormValues);
   const [copiedTarget, setCopiedTarget] = useState<"clean" | "campaign" | null>(
     null
   );
+  const savedCampaigns = state.savedCampaign
+    ? [
+        state.savedCampaign,
+        ...initialSavedCampaigns.filter(
+          (campaign) => campaign.id !== state.savedCampaign?.id
+        ),
+      ]
+    : initialSavedCampaigns;
+  const generatedUrl =
+    state.generatedUrl && state.generatedUrl.length > 0
+      ? state.generatedUrl
+      : buildDraftUrl(publicProfileUrl, form);
 
   function updateField(field: keyof CampaignFormState, value: string) {
     setForm((current) => ({ ...current, [field]: value }));
-    setErrors((current) => ({ ...current, [field]: undefined }));
-    setGeneratedUrl("");
-  }
-
-  function generateUrl(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    const parsed = campaignUrlInputSchema.safeParse(form);
-
-    if (!parsed.success) {
-      setErrors(toFieldErrors(parsed.error.issues));
-      setGeneratedUrl("");
-      return;
-    }
-
-    setErrors({});
-    setGeneratedUrl(buildCampaignUrl(publicProfileUrl, parsed.data));
   }
 
   function resetForm() {
-    setForm(initialFormState);
-    setErrors({});
-    setGeneratedUrl("");
+    setForm(initialFormValues);
     setCopiedTarget(null);
   }
 
@@ -127,17 +126,18 @@ export function CampaignUrlBuilder({
         <CardHeader>
           <CardTitle>Campaign URL builder</CardTitle>
           <CardDescription>
-            Use campaign URLs when sharing your public page on social platforms,
-            emails, paid ads, or communities.
+            Save campaign URLs when sharing your public page on social platforms,
+            emails, paid ads, or communities so analytics can track them cleanly.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form className="grid gap-5" onSubmit={generateUrl}>
+          <form id="campaign-url-builder-form" className="grid gap-5" action={formAction}>
+            <input type="hidden" name="publicProfileUrl" value={publicProfileUrl} />
             <FieldGroup className="grid gap-4 md:grid-cols-3">
               <CampaignField
                 label="Source"
                 value={form.source}
-                error={errors.source}
+                error={state.errors?.source}
                 placeholder="tiktok"
                 description="Where the visitor came from."
                 onChange={(value) => updateField("source", value)}
@@ -145,7 +145,7 @@ export function CampaignUrlBuilder({
               <CampaignField
                 label="Medium"
                 value={form.medium}
-                error={errors.medium}
+                error={state.errors?.medium}
                 placeholder="social"
                 description="The channel type."
                 onChange={(value) => updateField("medium", value)}
@@ -153,7 +153,7 @@ export function CampaignUrlBuilder({
               <CampaignField
                 label="Campaign"
                 value={form.campaign}
-                error={errors.campaign}
+                error={state.errors?.campaign}
                 placeholder="black_friday"
                 description="The campaign name."
                 onChange={(value) => updateField("campaign", value)}
@@ -183,7 +183,7 @@ export function CampaignUrlBuilder({
               <CampaignField
                 label="Content"
                 value={form.content}
-                error={errors.content}
+                error={state.errors?.content}
                 placeholder="bio_link"
                 description="Optional placement or creative."
                 onChange={(value) => updateField("content", value)}
@@ -191,19 +191,25 @@ export function CampaignUrlBuilder({
               <CampaignField
                 label="Term"
                 value={form.term}
-                error={errors.term}
+                error={state.errors?.term}
                 placeholder="affiliate_tools"
                 description="Optional keyword or audience term."
                 onChange={(value) => updateField("term", value)}
               />
             </div>
 
+            {state.message ? (
+              <div className="rounded-lg border border-border/70 bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
+                {state.message}
+              </div>
+            ) : null}
+
             <div className="flex flex-wrap gap-2">
-              <Button type="submit">
+              <Button type="submit" disabled={pending}>
                 <WandSparkles className="size-4" />
-                Generate URL
+                {pending ? "Saving..." : "Save campaign URL"}
               </Button>
-              <Button type="button" variant="outline" onClick={resetForm}>
+              <Button type="button" variant="outline" onClick={resetForm} disabled={pending}>
                 <RotateCcw className="size-4" />
                 Reset
               </Button>
@@ -246,6 +252,65 @@ export function CampaignUrlBuilder({
           )}
         </CardContent>
       </Card>
+
+      <Card className="border-border/70 bg-card">
+        <CardHeader>
+          <CardTitle>Saved campaigns</CardTitle>
+          <CardDescription>
+            Campaigns saved from this builder, with click totals matched by source, medium, and campaign name.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {savedCampaigns.length > 0 ? (
+            <div className="grid gap-3">
+              {savedCampaigns.map((campaign) => {
+                const campaignUrl = buildCampaignUrl(publicProfileUrl, {
+                  source: campaign.source,
+                  medium: campaign.medium,
+                  campaign: campaign.name,
+                  content: undefined,
+                  term: undefined,
+                });
+
+                return (
+                  <div key={campaign.id} className="rounded-lg border bg-muted/20 p-3">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold">{campaign.name}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {campaign.source} • {campaign.medium}
+                        </p>
+                        <div className="mt-3 rounded-md border bg-background px-2.5 py-2 font-mono text-xs text-muted-foreground break-all">
+                          {campaignUrl}
+                        </div>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-2">
+                        <div className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+                          <BarChart3 className="mr-1 inline size-3" />
+                          {campaign.clicks.toLocaleString()} clicks
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => copyValue(campaignUrl, "campaign")}
+                        >
+                          <Copy className="size-4" />
+                          Copy
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="rounded-lg border border-dashed bg-muted/20 px-3 py-6 text-center text-sm text-muted-foreground">
+              Save your first campaign URL to start tracking named campaigns in analytics.
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
@@ -259,7 +324,7 @@ function CampaignField({
   onChange,
 }: {
   label: string;
-  value: string;
+  value?: string;
   error?: string;
   placeholder: string;
   description: string;
@@ -272,7 +337,8 @@ function CampaignField({
       <FieldLabel htmlFor={id}>{label}</FieldLabel>
       <Input
         id={id}
-        value={value}
+        name={label.toLowerCase()}
+        value={value ?? ""}
         placeholder={placeholder}
         aria-invalid={Boolean(error)}
         onChange={(event) => onChange(event.target.value)}
@@ -312,14 +378,10 @@ function PresetGroup({
   );
 }
 
-function toFieldErrors(issues: ZodIssue[]) {
-  return issues.reduce<FieldErrors>((fieldErrors, issue) => {
-    const field = issue.path[0];
+function buildDraftUrl(publicProfileUrl: string, values: CampaignFormState) {
+  if (!values.source || !values.medium || !values.campaign) {
+    return "";
+  }
 
-    if (typeof field === "string" && field in initialFormState) {
-      fieldErrors[field as keyof CampaignFormState] = issue.message;
-    }
-
-    return fieldErrors;
-  }, {});
+  return buildCampaignUrl(publicProfileUrl, values);
 }
