@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 
-import type { LinkClick } from "@/db/schema";
+import type { LandingPageView, LinkClick } from "@/db/schema";
 
 export type ClickTrackingLinkIdentity = {
   affiliateLinkId: string;
@@ -18,6 +18,15 @@ export type TrackingSearchParams = Record<
   string | string[] | undefined
 >;
 
+export type LandingPageTrackingIdentity = {
+  landingPageId: string;
+  affiliateLinkId: string;
+  profileId: string;
+  userId: string | null;
+};
+
+type TrackingHeaderSource = Pick<Headers, "get" | "has">;
+
 const trackedUtmKeys = [
   "utm_source",
   "utm_medium",
@@ -31,26 +40,45 @@ export async function buildClickTrackingInput(
   link: ClickTrackingLinkIdentity
 ): Promise<ClickTrackingInput> {
   const url = new URL(request.url);
-  const userAgent = request.headers.get("user-agent");
-  const ipAddress = getForwardedIpAddress(request);
   const timestamp = new Date();
+  const trackingContext = await buildBaseTrackingContext({
+    headers: request.headers,
+    searchParams: Object.fromEntries(url.searchParams.entries()),
+    timestamp,
+  });
 
   return {
     affiliateLinkId: link.affiliateLinkId,
     profileId: link.profileId,
     userId: link.userId,
-    referer: request.headers.get("referer"),
-    userAgent,
-    ipAddressHash: ipAddress ? await hashIpAddress(ipAddress) : null,
-    country: getCountryCode(request),
-    deviceType: parseDeviceType(userAgent),
-    browser: parseBrowser(userAgent),
-    os: parseOperatingSystem(userAgent),
-    source: url.searchParams.get("utm_source"),
-    medium: url.searchParams.get("utm_medium"),
-    campaign: url.searchParams.get("utm_campaign"),
-    content: url.searchParams.get("utm_content"),
-    term: url.searchParams.get("utm_term"),
+    ...trackingContext,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  };
+}
+
+export type LandingPageTrackingInput = Omit<LandingPageView, "id">;
+
+export async function buildLandingPageTrackingInput(
+  request: {
+    headers: Headers;
+    searchParams?: TrackingSearchParams;
+  },
+  landingPage: LandingPageTrackingIdentity
+): Promise<LandingPageTrackingInput> {
+  const timestamp = new Date();
+  const trackingContext = await buildBaseTrackingContext({
+    headers: request.headers,
+    searchParams: request.searchParams,
+    timestamp,
+  });
+
+  return {
+    landingPageId: landingPage.landingPageId,
+    affiliateLinkId: landingPage.affiliateLinkId,
+    profileId: landingPage.profileId,
+    userId: landingPage.userId,
+    ...trackingContext,
     createdAt: timestamp,
     updatedAt: timestamp,
   };
@@ -148,16 +176,7 @@ export function buildTrackedGoHref(
   linkId: string,
   searchParams: TrackingSearchParams = {}
 ) {
-  const params = new URLSearchParams();
-
-  for (const key of trackedUtmKeys) {
-    const value = searchParams[key];
-    const normalizedValue = Array.isArray(value) ? value[0] : value;
-
-    if (normalizedValue) {
-      params.set(key, normalizedValue);
-    }
-  }
+  const params = buildTrackedUtmSearchParams(searchParams);
 
   const queryString = params.toString();
 
@@ -165,14 +184,14 @@ export function buildTrackedGoHref(
 }
 
 export function isTrackingPrefetchRequest(request: Request) {
-  const purpose = request.headers.get("purpose")?.toLowerCase();
-  const secPurpose = request.headers.get("sec-purpose")?.toLowerCase();
+  return hasTrackingPrefetchHeaders(request.headers);
+}
 
-  return (
-    request.headers.has("next-router-prefetch") ||
-    purpose === "prefetch" ||
-    secPurpose === "prefetch"
-  );
+export function hasTrackingPrefetchHeaders(headers: TrackingHeaderSource) {
+  const purpose = headers.get("purpose")?.toLowerCase();
+  const secPurpose = headers.get("sec-purpose")?.toLowerCase();
+
+  return headers.has("next-router-prefetch") || purpose === "prefetch" || secPurpose === "prefetch";
 }
 
 export async function hashIpAddress(ipAddress: string) {
@@ -181,24 +200,78 @@ export async function hashIpAddress(ipAddress: string) {
   return createHash("sha256").update(`${salt}:${ipAddress}`).digest("hex");
 }
 
-function getForwardedIpAddress(request: Request) {
-  const forwardedFor = request.headers.get("x-forwarded-for");
+async function buildBaseTrackingContext(input: {
+  headers: Headers;
+  searchParams?: TrackingSearchParams;
+  timestamp: Date;
+}) {
+  const { headers, searchParams = {} } = input;
+  const userAgent = headers.get("user-agent");
+  const ipAddress = getForwardedIpAddress(headers);
+  const utmParams = getTrackedUtmValues(searchParams);
+
+  return {
+    referer: headers.get("referer"),
+    userAgent,
+    ipAddressHash: ipAddress ? await hashIpAddress(ipAddress) : null,
+    country: getCountryCode(headers),
+    deviceType: parseDeviceType(userAgent),
+    browser: parseBrowser(userAgent),
+    os: parseOperatingSystem(userAgent),
+    source: utmParams.utm_source,
+    medium: utmParams.utm_medium,
+    campaign: utmParams.utm_campaign,
+    content: utmParams.utm_content,
+    term: utmParams.utm_term,
+  };
+}
+
+function buildTrackedUtmSearchParams(searchParams: TrackingSearchParams = {}) {
+  const params = new URLSearchParams();
+
+  for (const key of trackedUtmKeys) {
+    const value = normalizeTrackingParamValue(searchParams[key]);
+
+    if (value) {
+      params.set(key, value);
+    }
+  }
+
+  return params;
+}
+
+function getTrackedUtmValues(searchParams: TrackingSearchParams = {}) {
+  return {
+    utm_source: normalizeTrackingParamValue(searchParams.utm_source),
+    utm_medium: normalizeTrackingParamValue(searchParams.utm_medium),
+    utm_campaign: normalizeTrackingParamValue(searchParams.utm_campaign),
+    utm_content: normalizeTrackingParamValue(searchParams.utm_content),
+    utm_term: normalizeTrackingParamValue(searchParams.utm_term),
+  };
+}
+
+function normalizeTrackingParamValue(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] ?? null : value ?? null;
+}
+
+function getForwardedIpAddress(headers: TrackingHeaderSource) {
+  const forwardedFor = headers.get("x-forwarded-for");
 
   if (forwardedFor) {
     return forwardedFor.split(",")[0]?.trim() || null;
   }
 
   return (
-    request.headers.get("x-real-ip") ??
-    request.headers.get("cf-connecting-ip") ??
+    headers.get("x-real-ip") ??
+    headers.get("cf-connecting-ip") ??
     null
   );
 }
 
-function getCountryCode(request: Request) {
+function getCountryCode(headers: TrackingHeaderSource) {
   return (
-    request.headers.get("x-vercel-ip-country") ??
-    request.headers.get("cf-ipcountry") ??
+    headers.get("x-vercel-ip-country") ??
+    headers.get("cf-ipcountry") ??
     null
   );
 }

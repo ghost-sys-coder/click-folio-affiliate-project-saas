@@ -282,3 +282,27 @@ export const generatedLandingPagesTable = pgTable("generated_landing_pages", {
 ]);
 
 export type GeneratedLandingPage = typeof generatedLandingPagesTable.$inferSelect;
+
+export const landingPageViewsTable = pgTable("landing_page_views", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    landingPageId: uuid("landing_page_id").notNull().references(() => generatedLandingPagesTable.id),
+    affiliateLinkId: uuid("affiliate_link_id").notNull().references(() => affiliateLinksTable.id),
+    profileId: uuid("profile_id").notNull().references(() => profilesTable.id),
+    userId: uuid("user_id").references(() => usersTable.id),
+    referer: text("referer"),
+    userAgent: text("user_agent"),
+    ipAddressHash: text("ip_address_hash"),
+    country: text("country"),
+    deviceType: text("device_type"),
+    browser: text("browser"),
+    os: text("os"),
+    source: text("source"),
+    medium: text("medium"),
+    campaign: text("campaign"),
+    content: text("content"),
+    term: text("term"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow()
+});
+
+export type LandingPageView = typeof landingPageViewsTable.$inferSelect;

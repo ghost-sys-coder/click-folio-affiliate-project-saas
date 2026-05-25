@@ -2,6 +2,7 @@ import { ArrowRight, CheckCircle2, ShieldAlert, Check, X as CloseX, Info } from 
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
+import { buildTrackedGoHref, type TrackingSearchParams } from "@/lib/click-tracking";
 import type { LandingPageOutput, LandingPageSection } from "@/lib/landing-pages";
 
 type LandingPageRendererProps = {
@@ -9,6 +10,7 @@ type LandingPageRendererProps = {
   theme: string;
   affiliateLinkId: string;
   isPreview?: boolean;
+  trackingParams?: TrackingSearchParams;
 };
 
 export function LandingPageRenderer({
@@ -16,6 +18,7 @@ export function LandingPageRenderer({
   theme,
   affiliateLinkId,
   isPreview = false,
+  trackingParams,
 }: LandingPageRendererProps) {
   // Backward compatibility migration for old static schema
   const legacyData = data as any;
@@ -48,7 +51,8 @@ export function LandingPageRenderer({
         <SectionMapper 
           key={`${section.type}-${index}`} 
           section={section as any} 
-          affiliateLinkId={affiliateLinkId} 
+          affiliateLinkId={affiliateLinkId}
+          trackingParams={trackingParams}
         />
       ))}
 
@@ -78,14 +82,16 @@ export function LandingPageRenderer({
 
 function SectionMapper({ 
   section, 
-  affiliateLinkId 
+  affiliateLinkId,
+  trackingParams,
 }: { 
   section: LandingPageSection; 
   affiliateLinkId: string;
+  trackingParams?: TrackingSearchParams;
 }) {
   switch (section.type) {
     case "hero":
-      return <HeroSection content={section.content} affiliateLinkId={affiliateLinkId} />;
+      return <HeroSection content={section.content} affiliateLinkId={affiliateLinkId} trackingParams={trackingParams} />;
     case "problem":
       return <ProblemSection content={section.content} />;
     case "solution":
@@ -105,7 +111,7 @@ function SectionMapper({
     case "faq":
       return <FaqSection content={section.content} />;
     case "finalCta":
-      return <FinalCtaSection content={section.content} affiliateLinkId={affiliateLinkId} />;
+      return <FinalCtaSection content={section.content} affiliateLinkId={affiliateLinkId} trackingParams={trackingParams} />;
     default:
       return null;
   }
@@ -113,8 +119,16 @@ function SectionMapper({
 
 // --- Component Blocks ---
 
-function HeroSection({ content, affiliateLinkId }: { content: any; affiliateLinkId: string }) {
-  const ctaHref = `/go/${affiliateLinkId}`;
+function HeroSection({
+  content,
+  affiliateLinkId,
+  trackingParams,
+}: {
+  content: any;
+  affiliateLinkId: string;
+  trackingParams?: TrackingSearchParams;
+}) {
+  const ctaHref = buildTrackedGoHref(affiliateLinkId, trackingParams);
   return (
     <section className="relative pt-20 pb-16 md:pt-32 md:pb-24 overflow-hidden border-b border-border/40 bg-linear-to-b from-muted/50 to-background">
       <div className="container px-4 mx-auto relative z-10">
@@ -374,8 +388,16 @@ function FaqSection({ content }: { content: any }) {
   );
 }
 
-function FinalCtaSection({ content, affiliateLinkId }: { content: any; affiliateLinkId: string }) {
-  const ctaHref = `/go/${affiliateLinkId}`;
+function FinalCtaSection({
+  content,
+  affiliateLinkId,
+  trackingParams,
+}: {
+  content: any;
+  affiliateLinkId: string;
+  trackingParams?: TrackingSearchParams;
+}) {
+  const ctaHref = buildTrackedGoHref(affiliateLinkId, trackingParams);
   return (
     <section className="py-24 bg-primary text-primary-foreground text-center">
       <div className="container px-4 mx-auto">

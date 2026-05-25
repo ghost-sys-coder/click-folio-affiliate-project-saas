@@ -1,0 +1,21 @@
+CREATE TABLE IF NOT EXISTS "landing_page_views" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+  "landing_page_id" uuid NOT NULL REFERENCES "generated_landing_pages"("id"),
+  "affiliate_link_id" uuid NOT NULL REFERENCES "affiliate_links"("id"),
+  "profile_id" uuid NOT NULL REFERENCES "profiles"("id"),
+  "user_id" uuid REFERENCES "users"("id"),
+  "referer" text,
+  "user_agent" text,
+  "ip_address_hash" text,
+  "country" text,
+  "device_type" text,
+  "browser" text,
+  "os" text,
+  "source" text,
+  "medium" text,
+  "campaign" text,
+  "content" text,
+  "term" text,
+  "created_at" timestamp DEFAULT now() NOT NULL,
+  "updated_at" timestamp DEFAULT now() NOT NULL
+);
