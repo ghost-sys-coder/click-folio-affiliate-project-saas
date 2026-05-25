@@ -10,7 +10,7 @@ function TopLink({ title, clicks }: { title: string; clicks: string }) {
         </div>
         <div>
           <p className="text-sm font-medium">{title}</p>
-          <p className="text-xs text-muted-foreground">clickfolio.io/go/example</p>
+          <p className="text-xs text-muted-foreground">clickfolio.io/go/{title.split(" ")[0].toLowerCase() + ".com"}</p>
         </div>
       </div>
       <p className="text-sm font-semibold">{clicks}</p>

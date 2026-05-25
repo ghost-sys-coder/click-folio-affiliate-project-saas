@@ -12,11 +12,14 @@ const plans = [
       "25 affiliate links",
       "Basic click tracking",
       "25 AI generations per month",
+      "5 published landings per month",
+      "10 AI landing page generations per month",
+      "25 AI landing page edits per month",
       "Campaign URL builder",
       "CSV, Excel, JSON import up to 100 rows per upload",
       "Clickfolio branding on public pages",
     ],
-    cta: "Start Starter",
+    cta: "Start 7 day trial",
     href: "/sign-up",
     highlighted: false,
   },
@@ -31,10 +34,13 @@ const plans = [
       "Campaign URL builder",
       "Top sources, campaigns, devices, countries",
       "150 content generations per month",
+      "25 published landings per month",
+      "50 AI landing page generations per month",
+      "100 AI landing page edits per month",
       "CSV, Excel, JSON import up to 500 rows per upload",
       "Remove Clickfolio branding",
     ],
-    cta: "Start Pro",
+    cta: "Start 7 day trial",
     href: "/sign-up",
     highlighted: true,
   },
@@ -44,14 +50,17 @@ const plans = [
     description: "For serious affiliate marketers with heavier workflows.",
     features: [
       "Everything in Pro",
-      "500 Content generations per month",
+      "500 content generations per month",
+      "75 published landings per month",
+      "125 AI landing page generations per month",
+      "350 AI landing page edits per month",
       "CSV, Excel, JSON import up to 1,000 rows per upload",
       "Analytics Export",
       "Priority support",
-      "Future Creative brief tools",
+      "Future creative brief tools",
       "Early access to new features",
     ],
-    cta: "Start Creator Plus",
+    cta: "Start 7 day trial",
     href: "/sign-up",
     highlighted: false,
   },
@@ -71,8 +80,7 @@ const PricingSection = () => {
               Start small. Upgrade when clicks matter.
             </h2>
             <p className="mt-4 text-lg leading-8 text-muted-foreground">
-              Keep the free plan useful, but make serious promotion a paid
-              workflow.
+              Start with a 7 day trial, then choose the plan that matches your affiliate workflow.
             </p>
           </div>
 

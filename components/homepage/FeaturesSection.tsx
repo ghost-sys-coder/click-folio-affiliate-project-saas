@@ -1,33 +1,32 @@
 import React from 'react';
-import { Link2, MousePointerClick, PenLine, ShieldCheck } from "lucide-react";
+import { FileText, Link2, MousePointerClick, PenLine, ShieldCheck } from "lucide-react";
 
 const features = [
-    {
-        icon: Link2,
-        title: "Affiliate link hub",
-        description:
-            "Create one clean public page for your best affiliate offers, products, tools, and recommendations.",
-    },
-    {
-        icon: MousePointerClick,
-        title: "Click tracking",
-        description:
-            "See which links get attention, where traffic comes from, and which offers deserve more promotion.",
-    },
-    {
-        icon: PenLine,
-        title: "Content generator",
-        description:
-            "Generate platform ready posts for Facebook, TikTok, Instagram, X, LinkedIn, YouTube Shorts, and WhatsApp.",
-    },
-    {
-        icon: ShieldCheck,
-        title: "Disclosure helper",
-        description:
-            "Add clear affiliate disclosures to your public page and promotional content without rewriting every post.",
-    },
+  {
+    icon: FileText,
+    title: "AI landing page generator",
+    description:
+      "Turn individual affiliate products into focused landing pages with hero copy, benefits, FAQs, disclosure text, SEO metadata, and tracked CTA buttons.",
+  },
+  {
+    icon: Link2,
+    title: "Affiliate link hub",
+    description:
+      "Create one clean public profile for your affiliate offers, product recommendations, tools, and resources.",
+  },
+  {
+    icon: MousePointerClick,
+    title: "Campaign and click tracking",
+    description:
+      "Build campaign URLs, track clicks by source, medium, and campaign, then see which links and channels are getting attention.",
+  },
+  {
+    icon: PenLine,
+    title: "Content Studio",
+    description:
+      "Generate platform ready promotional content for TikTok, Instagram, Facebook, X, LinkedIn, YouTube Shorts, WhatsApp, and email.",
+  },
 ];
-
 const FeaturesSection = () => {
     return (
         <section id="features" className="bg-surface px-6 py-24 text-foreground lg:px-8">

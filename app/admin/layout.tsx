@@ -1,3 +1,4 @@
+import Script from "next/script";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
@@ -27,7 +28,7 @@ const AdminDashboardLayout = async ({ children }: { children: React.ReactNode })
 
   return (
     <>
-      <script
+      <Script
         dangerouslySetInnerHTML={{ __html: buildAdminThemeBootstrapScript() }}
       />
       <AdminThemeShell>

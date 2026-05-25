@@ -1,10 +1,14 @@
+"use client";
 import React from 'react';
 import Link from 'next/link';
 import { Sparkles, ArrowRight, BarChart3 } from 'lucide-react';
 import MetricCard from '../shared/MetricCard';
 import TopLink from '../shared/TopLink';
+import { useUser } from '@clerk/nextjs';
+import { Skeleton } from '../ui/skeleton';
 
 const HomepageHeroSection = () => {
+    const { user, isLoaded } = useUser();
     return (
         <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-14 px-6 pb-24 pt-14 lg:grid-cols-2 lg:px-8 lg:pb-32 lg:pt-20">
             <div>
@@ -14,23 +18,25 @@ const HomepageHeroSection = () => {
                 </div>
 
                 <h1 className="max-w-3xl text-5xl font-bold tracking-tight text-foreground md:text-6xl">
-                    Turn scattered affiliate links into a trackable storefront.
+                    AI generated affiliate landing pages with tracking.
                 </h1>
 
                 <p className="mt-6 max-w-2xl text-lg leading-8 text-muted-foreground">
-                    Create a polished affiliate page, organize every offer, track
-                    clicks, and generate platform ready content from one focused
-                    dashboard.
+                    Generate dedicated landing pages for the products you promote, track every click, build campaign URLs, and create promotional content from one affiliate marketing dashboard.
                 </p>
 
                 <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                    <Link
-                        href="/sign-up"
-                        className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary-hover"
-                    >
-                        Create your Clickfolio
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                    </Link>
+                    {!isLoaded ? (
+                        <Skeleton className='h-10 w-50 rounded-xl' />
+                    ) : (
+                        <Link
+                            href={user ? "/admin" : "/sign-in"}
+                            className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary-hover"
+                        >
+                            Start 7 day trial
+                            <ArrowRight className="ml-2 h-4 w-4" />
+                        </Link>
+                    )}
 
                     <Link
                         href="#features"
@@ -42,15 +48,15 @@ const HomepageHeroSection = () => {
 
                 <div className="mt-10 grid max-w-xl grid-cols-3 gap-4 border-t border-border pt-8">
                     <div>
-                        <p className="text-2xl font-bold">1 page</p>
+                        <p className="text-xl font-bold">Landing Pages</p>
                         <p className="mt-1 text-sm text-muted-foreground">For every offer</p>
                     </div>
                     <div>
-                        <p className="text-2xl font-bold">Live clicks</p>
+                        <p className="text-xl font-bold">Tracked clicks</p>
                         <p className="mt-1 text-sm text-muted-foreground">Tracked daily</p>
                     </div>
                     <div>
-                        <p className="text-2xl font-bold">AI posts</p>
+                        <p className="text-xl font-bold">AI edits</p>
                         <p className="mt-1 text-sm text-muted-foreground">For promotion</p>
                     </div>
                 </div>
@@ -73,7 +79,7 @@ const HomepageHeroSection = () => {
 
                         <div className="grid gap-4 sm:grid-cols-3">
                             <MetricCard label="Total clicks" value="12,846" change="+18.6%" />
-                            <MetricCard label="Active links" value="128" change="+8.5%" />
+                            <MetricCard label="Landing Pages" value="128" change="+6% this month" />
                             <MetricCard label="Top source" value="TikTok" change="42%" />
                         </div>
 
@@ -104,9 +110,9 @@ const HomepageHeroSection = () => {
                         </div>
 
                         <div className="mt-4 space-y-3">
-                            <TopLink title="Smartwatch Pro" clicks="2,450" />
-                            <TopLink title="Wireless Earbuds" clicks="1,987" />
-                            <TopLink title="Creator Course" clicks="1,430" />
+                            <TopLink title="Shopify Landing Page" clicks="2,450" />
+                            <TopLink title="Hostinger Page" clicks="1,987" />
+                            <TopLink title="SEMRush SEO toolkit" clicks="1,430" />
                         </div>
                     </div>
                 </div>
