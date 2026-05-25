@@ -1,33 +1,10 @@
 "use client";
-import React, { useState } from 'react';
-import Link from "next/link";
+import React from 'react';
 import { Check } from "lucide-react";
 import { Plan } from './PricingSection';
 import { Button } from '../ui/button';
-import axios from 'axios';
 
 const PricingCard = ({ plan }: { plan: Plan }) => {
-    // test payments with pesapal
-    const [isSubscribing, setIsSubscribing] = useState(false);
-
-    const handleSubscription = async () => {
-        setIsSubscribing(true);
-        try {
-            const response = await axios.post("/api/payments/pesapal/create-order");
-            console.log("Pesapal order response", response.data);
-                if (response.data.success) {
-                    const { order } = response.data;
-                    // Redirect the user to the Pesapal payment page
-                    window.location.href = order.redirect_url;
-                } else {
-                    console.error("Failed to create Pesapal order", response.data.message);
-                }
-        } catch (error) {
-            console.error("Error creating Pesapal order", error);
-        } finally {
-            setIsSubscribing(false);
-        }
-    } 
     return (
         <div
             key={plan.name}
@@ -38,9 +15,9 @@ const PricingCard = ({ plan }: { plan: Plan }) => {
         >
             <div className="flex items-center justify-between gap-4">
                 <h3 className="text-xl font-semibold">{plan.name}</h3>
-                {plan.highlighted ? (
+                {plan.badge ? (
                     <span className="rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">
-                        Best start
+                        {plan.badge}
                     </span>
                 ) : null}
             </div>
@@ -74,11 +51,13 @@ const PricingCard = ({ plan }: { plan: Plan }) => {
                 // href={plan.href}
                 className={`mt-8 inline-flex w-full items-center justify-center rounded-full px-5 py-5 text-sm font-semibold transition ${plan.highlighted
                         ? "bg-foreground text-background hover:bg-foreground/90"
-                        : "bg-primary text-primary-foreground hover:bg-primary-hover"
+                        : plan.ctaDisabled
+                            ? "bg-muted text-muted-foreground hover:bg-muted"
+                            : "bg-primary text-primary-foreground hover:bg-primary-hover"
                     }`}
-                disabled={isSubscribing}
+                disabled={plan.ctaDisabled}
             >
-                {isSubscribing ? "Processing..." : plan.cta}
+                {plan.cta}
             </Button>
         </div>
     )
