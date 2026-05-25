@@ -32,6 +32,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import type { GeneratedLandingPage } from "@/db/schema";
 import {
+  faqVariants,
   normalizeLandingPageOutput,
   type LandingPageSection,
 } from "@/lib/landing-pages";
@@ -287,6 +288,9 @@ function SectionEditorItem({ section, index }: { section: LandingPageSection; in
   const [heroMediaLayout, setHeroMediaLayout] = useState(
     section.type === "hero" ? section.content.mediaLayout || "right" : "right"
   );
+  const [faqVariant, setFaqVariant] = useState(
+    section.type === "faq" ? section.content.variant || "cards" : "cards"
+  );
   
   const getIcon = () => {
     switch (section.type) {
@@ -322,6 +326,41 @@ function SectionEditorItem({ section, index }: { section: LandingPageSection; in
         <div className="space-y-6">
           {Object.entries(section.content).map(([key, value]) => {
             if (key === "imageUrl" || key === "videoUrl" || key === "mediaLayout") return null;
+
+            if (section.type === "faq" && key === "variant" && typeof value === "string") {
+              return (
+                <Field key={key}>
+                  <FieldLabel>FAQ Layout</FieldLabel>
+                  <input
+                    type="hidden"
+                    name={`${prefix}${key}`}
+                    value={faqVariant}
+                  />
+                  <Select
+                    value={faqVariant}
+                    onValueChange={(nextValue) =>
+                      setFaqVariant(nextValue as (typeof faqVariants)[number])
+                    }
+                  >
+                    <SelectTrigger className="bg-background">
+                      <SelectValue placeholder="Choose FAQ layout" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        {faqVariants.map((variant) => (
+                          <SelectItem key={variant} value={variant}>
+                            {variant === "cards" ? "Cards" : "Accordion"}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                  <FieldDescription>
+                    Choose how FAQ entries are presented while keeping the same structured content.
+                  </FieldDescription>
+                </Field>
+              );
+            }
             
             if (Array.isArray(value)) {
               // Handle simple string arrays (bullets, items as strings)
