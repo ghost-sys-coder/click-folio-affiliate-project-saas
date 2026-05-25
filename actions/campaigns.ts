@@ -3,6 +3,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import type { ZodIssue } from "zod";
 
 import { getSavedCampaignSummaries, createOrRefreshCampaignForWorkspace, type SavedCampaignSummary } from "@/db/campaigns";
 import { getProfileByUserId, getUserByClerkUserId } from "@/db/profiles";
@@ -116,7 +117,7 @@ function normalizeOptionalField(value: FormDataEntryValue | null) {
   return text.length > 0 ? text : undefined;
 }
 
-function toFieldErrors(issues: { path: (string | number)[]; message: string }[]) {
+function toFieldErrors(issues: ZodIssue[]) {
   return issues.reduce<Partial<Record<keyof CampaignUrlInput, string>>>(
     (fieldErrors, issue) => {
       const field = issue.path[0];
