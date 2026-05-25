@@ -18,7 +18,7 @@ import {
   buildTrackedGoHref,
   type TrackingSearchParams,
 } from "@/lib/click-tracking";
-import { appThemes, normalizeAppTheme, themeAttribute } from "@/lib/themes";
+import { getThemeLabel, normalizeAppTheme, themeAttribute } from "@/lib/themes";
 
 type PublishedProfile = NonNullable<PublicProfile>;
 
@@ -296,7 +296,7 @@ function AffiliateDisclosure({
           <ExternalLink className="size-3.5" />
           Powered by Clickfolio
           <span className="sr-only">
-            using the {theme === appThemes.growthMint ? "Growth Mint" : "Signal Purple"} theme
+            using the {getThemeLabel(theme)} theme
           </span>
         </div>
       )}

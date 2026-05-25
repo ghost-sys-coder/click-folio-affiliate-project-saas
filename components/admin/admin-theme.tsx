@@ -2,9 +2,14 @@
 
 import * as React from "react";
 import type { LucideIcon } from "lucide-react";
-import { Coins, Moon, Sprout } from "lucide-react";
+import { Coins, Moon, Sprout, SunMedium, Waves } from "lucide-react";
 
-import { appThemes, type AppTheme } from "@/lib/themes";
+import {
+  appThemeValues,
+  appThemes,
+  getThemeMode,
+  type AppTheme,
+} from "@/lib/themes";
 
 const ADMIN_THEME_STORAGE_KEY = "clickfolio-admin-theme";
 const ADMIN_THEME_EVENT = "clickfolio-admin-theme-change";
@@ -35,14 +40,22 @@ export const adminThemeOptions: AdminThemeOption[] = [
     description: "Premium gold theme",
     icon: Coins,
   },
+  {
+    value: appThemes.oceanCyan,
+    label: "Ocean Cyan",
+    description: "Deep teal theme with crisp contrast",
+    icon: Waves,
+  },
+  {
+    value: appThemes.sunsetCoral,
+    label: "Sunset Coral",
+    description: "Warm editorial theme with soft highlights",
+    icon: SunMedium,
+  },
 ];
 
 function isAdminTheme(value: string | null): value is AppTheme {
-  return (
-    value === appThemes.growthMint ||
-    value === appThemes.signalPurple ||
-    value === appThemes.commerceGold
-  );
+  return Boolean(value && appThemeValues.includes(value as AppTheme));
 }
 
 function getStoredAdminTheme() {
@@ -94,6 +107,38 @@ export function useAdminTheme() {
 
 export function AdminThemeShell({ children }: { children: React.ReactNode }) {
   const { theme } = useAdminTheme();
+
+  React.useEffect(() => {
+    const root = document.documentElement;
+    const body = document.body;
+    const previousRootTheme = root.getAttribute("data-theme");
+    const previousBodyTheme = body.getAttribute("data-theme");
+    const previousColorScheme = root.style.colorScheme;
+    const previousDarkClass = root.classList.contains("dark");
+    const themeMode = getThemeMode(theme);
+
+    root.setAttribute("data-theme", theme);
+    body.setAttribute("data-theme", theme);
+    root.style.colorScheme = themeMode;
+    root.classList.toggle("dark", themeMode === "dark");
+
+    return () => {
+      if (previousRootTheme) {
+        root.setAttribute("data-theme", previousRootTheme);
+      } else {
+        root.removeAttribute("data-theme");
+      }
+
+      if (previousBodyTheme) {
+        body.setAttribute("data-theme", previousBodyTheme);
+      } else {
+        body.removeAttribute("data-theme");
+      }
+
+      root.style.colorScheme = previousColorScheme;
+      root.classList.toggle("dark", previousDarkClass);
+    };
+  }, [theme]);
 
   return (
     <div data-theme={theme} className="min-h-svh bg-background text-foreground">

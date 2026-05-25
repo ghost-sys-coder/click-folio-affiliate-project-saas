@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { getThemeLabel } from "@/lib/themes";
 
 type ProfileStatusCardProps = {
   isPublished: boolean;
@@ -30,7 +31,7 @@ export function ProfileStatusCard({
     toast.success("Public profile URL copied");
   };
 
-  const themeLabel = theme === "signal-purple" ? "Signal Purple" : "Growth Mint";
+  const themeLabel = getThemeLabel(theme);
 
   return (
     <Card className="border-border/60 shadow-sm">
@@ -50,7 +51,7 @@ export function ProfileStatusCard({
               <Globe className="size-4" />
               Public URL
             </div>
-            <span className="font-mono text-[10px] truncate max-w-[150px]">{publicUrl}</span>
+            <span className="font-mono text-[10px] truncate max-w-37.5">{publicUrl}</span>
           </div>
           
           <div className="flex items-center justify-between text-sm">

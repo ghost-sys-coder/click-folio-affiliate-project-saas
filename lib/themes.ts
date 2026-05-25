@@ -2,24 +2,52 @@ export const appThemes = {
   signalPurple: "signal-purple",
   growthMint: "growth-mint",
   commerceGold: "commerce-gold",
+  oceanCyan: "ocean-cyan",
+  sunsetCoral: "sunset-coral",
 } as const;
 
 export type AppTheme = (typeof appThemes)[keyof typeof appThemes];
 
+export const appThemeOptions = [
+  { value: appThemes.growthMint, label: "Growth Mint" },
+  { value: appThemes.signalPurple, label: "Signal Purple" },
+  { value: appThemes.commerceGold, label: "Commerce Gold" },
+  { value: appThemes.oceanCyan, label: "Ocean Cyan" },
+  { value: appThemes.sunsetCoral, label: "Sunset Coral" },
+] as const;
+
+export const appThemeValues = appThemeOptions.map((theme) => theme.value) as [
+  AppTheme,
+  ...AppTheme[],
+];
+
+const darkAppThemes = new Set<AppTheme>([
+  appThemes.signalPurple,
+  appThemes.commerceGold,
+  appThemes.oceanCyan,
+]);
+
 export function normalizeAppTheme(theme: string | null | undefined): AppTheme {
-  if (theme === appThemes.signalPurple) {
-    return appThemes.signalPurple;
-  }
-
-  if (theme === appThemes.commerceGold) {
-    return appThemes.commerceGold;
-  }
-
-  return appThemes.growthMint;
+  return appThemeValues.find((value) => value === theme) ?? appThemes.growthMint;
 }
 
 export function themeAttribute(theme: AppTheme) {
   return { "data-theme": theme };
+}
+
+export function getThemeLabel(theme: string | null | undefined) {
+  return (
+    appThemeOptions.find((option) => option.value === theme)?.label ??
+    appThemeOptions[0].label
+  );
+}
+
+export function isDarkAppTheme(theme: AppTheme) {
+  return darkAppThemes.has(theme);
+}
+
+export function getThemeMode(theme: AppTheme) {
+  return isDarkAppTheme(theme) ? "dark" : "light";
 }
 
 export const signalPurpleClerkAppearance = {

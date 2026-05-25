@@ -1,4 +1,9 @@
-import { appThemes, type AppTheme } from "./themes.ts";
+import {
+  appThemeOptions,
+  appThemes,
+  normalizeAppTheme,
+  type AppTheme,
+} from "./themes.ts";
 
 export const onboardingNiches = [
   { value: "creator-tools", label: "Creator tools" },
@@ -11,11 +16,7 @@ export const onboardingNiches = [
   { value: "other", label: "Other" },
 ] as const;
 
-export const onboardingProfileThemes = [
-  { value: appThemes.growthMint, label: "Growth Mint" },
-  { value: appThemes.signalPurple, label: "Signal Purple" },
-  { value: appThemes.commerceGold, label: "Commerce Gold" },
-] as const;
+export const onboardingProfileThemes = appThemeOptions;
 
 export const onboardingPlatforms = [
   { value: "instagram", label: "Instagram" },
@@ -201,15 +202,7 @@ function normalizeUsername(value: string) {
 }
 
 function normalizeTheme(value: string): AppTheme {
-  if (value === appThemes.signalPurple) {
-    return appThemes.signalPurple;
-  }
-
-  if (value === appThemes.commerceGold) {
-    return appThemes.commerceGold;
-  }
-
-  return appThemes.growthMint;
+  return normalizeAppTheme(value);
 }
 
 function isValidHttpUrl(value: string) {

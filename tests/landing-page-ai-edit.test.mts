@@ -2,10 +2,14 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  appThemes,
+} from "../lib/themes.ts";
+import {
   buildLandingPageEditPrompt,
 } from "../lib/ai-landing-pages.ts";
 import {
   getHeroMediaLayoutMode,
+  landingPageGenerationSchema,
   landingPageOutputSchema,
   normalizeLandingPageOutput,
 } from "../lib/landing-pages.ts";
@@ -199,4 +203,25 @@ test("builds an AI edit prompt from current output and requested change", () => 
   assert.match(prompt.userPrompt, /mediaLayout/);
   assert.match(prompt.systemPrompt, /editor/i);
   assert.match(prompt.systemPrompt, /background/);
+});
+
+test("landing page generation schema accepts the new theme options", () => {
+  const oceanTheme = landingPageGenerationSchema.parse({
+    linkId: "123e4567-e89b-12d3-a456-426614174000",
+    audience: "Beginners",
+    pageGoal: "Drive affiliate clicks",
+    tone: "Direct",
+    theme: appThemes.oceanCyan,
+  });
+
+  const sunsetTheme = landingPageGenerationSchema.parse({
+    linkId: "123e4567-e89b-12d3-a456-426614174001",
+    audience: "Creators",
+    pageGoal: "Explain the product",
+    tone: "Friendly",
+    theme: appThemes.sunsetCoral,
+  });
+
+  assert.equal(oceanTheme.theme, appThemes.oceanCyan);
+  assert.equal(sunsetTheme.theme, appThemes.sunsetCoral);
 });

@@ -8,6 +8,7 @@ import {
   type LandingPageOutput,
   type LandingPageSection,
 } from "@/lib/landing-pages";
+import { getThemeMode, normalizeAppTheme } from "@/lib/themes";
 
 type LandingPageRendererProps = {
   data: LandingPageOutput;
@@ -26,9 +27,14 @@ export function LandingPageRenderer({
 }: LandingPageRendererProps) {
   const normalizedData = normalizeLandingPageOutput(data);
   const sections = normalizedData.sections;
+  const resolvedTheme = normalizeAppTheme(theme);
+  const isDarkTheme = getThemeMode(resolvedTheme) === "dark";
 
   return (
-    <div data-theme={theme} className="min-h-screen bg-background text-foreground selection:bg-primary/20">
+    <div
+      data-theme={resolvedTheme}
+      className={`min-h-screen bg-background text-foreground selection:bg-primary/20 ${isDarkTheme ? "dark" : ""}`}
+    >
       {isPreview && (
         <div className="bg-amber-500 text-white text-center py-1 text-xs font-bold uppercase tracking-widest sticky top-0 z-50">
           Preview Mode - Page is not public

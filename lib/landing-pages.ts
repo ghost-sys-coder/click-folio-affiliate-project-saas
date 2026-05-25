@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { appThemes } from "./themes.ts";
+import { appThemeValues } from "./themes.ts";
 
 export const heroMediaLayouts = ["left", "right", "stacked", "background"] as const;
 
@@ -55,7 +55,7 @@ export const landingPageGenerationSchema = z.object({
   customAudience: z.string().trim().max(120).optional(),
   pageGoal: z.enum(landingPageGoals),
   tone: z.enum(landingPageTones),
-  theme: z.enum([appThemes.growthMint, appThemes.signalPurple, appThemes.commerceGold]),
+  theme: z.enum(appThemeValues),
   extraContext: z
     .string()
     .trim()
