@@ -3,6 +3,7 @@ import { ArrowRight, CheckCircle2, ShieldAlert, Check, X as CloseX, Info } from 
 import { Button } from "@/components/ui/button";
 import { buildTrackedGoHref, type TrackingSearchParams } from "@/lib/click-tracking";
 import {
+  getHeroMediaLayoutMode,
   normalizeLandingPageOutput,
   type LandingPageOutput,
   type LandingPageSection,
@@ -117,27 +118,66 @@ function HeroSection({
 }) {
   const ctaHref = buildTrackedGoHref(affiliateLinkId, trackingParams);
   const hasMedia = Boolean(content.imageUrl || content.videoUrl);
-  const mediaLayout = content.mediaLayout || "right";
-  const mediaFirst = mediaLayout === "left";
-  const stackedLayout = mediaLayout === "stacked" || !hasMedia;
+  const { backgroundLayout, mediaFirst, stackedLayout, showMediaPanel } =
+    getHeroMediaLayoutMode(content.mediaLayout, hasMedia);
+  const textToneClass = backgroundLayout ? "text-white" : "text-foreground";
+  const subheadlineToneClass = backgroundLayout
+    ? "text-white/85"
+    : "text-muted-foreground";
+  const eyebrowClass = backgroundLayout
+    ? "bg-white/15 text-white"
+    : "bg-primary/10 text-primary";
+  const heroSectionClass = backgroundLayout
+    ? "relative overflow-hidden border-b border-border/40 bg-slate-950 pt-24 pb-20 md:pt-36 md:pb-28"
+    : "relative overflow-hidden border-b border-border/40 bg-linear-to-b from-muted/50 to-background pt-20 pb-16 md:pt-32 md:pb-24";
 
   return (
-    <section className="relative pt-20 pb-16 md:pt-32 md:pb-24 overflow-hidden border-b border-border/40 bg-linear-to-b from-muted/50 to-background">
+    <section className={heroSectionClass}>
+      {backgroundLayout && hasMedia ? (
+        <>
+          <div className="absolute inset-0">
+            {content.videoUrl ? (
+              <video
+                src={content.videoUrl}
+                className="h-full w-full object-cover"
+                autoPlay
+                muted
+                loop
+                playsInline
+              />
+            ) : content.imageUrl ? (
+              <img
+                src={content.imageUrl}
+                alt={content.headline}
+                className="h-full w-full object-cover"
+              />
+            ) : null}
+          </div>
+          <div className="absolute inset-0 bg-slate-950/55" />
+          <div className="absolute inset-0 bg-linear-to-b from-slate-950/20 via-slate-950/40 to-slate-950/80" />
+        </>
+      ) : null}
+
       <div className="container px-4 mx-auto relative z-10">
         <div className={`flex flex-col gap-12 ${stackedLayout ? "text-center" : `lg:flex-row lg:items-center lg:text-left ${mediaFirst ? "lg:flex-row-reverse" : ""}`}`}>
-          <div className={`${hasMedia && !stackedLayout ? "lg:w-1/2" : "max-w-4xl mx-auto"}`}>
+          <div className={`${showMediaPanel && !stackedLayout ? "lg:w-1/2" : "max-w-4xl mx-auto"}`}>
             {content.eyebrow && (
-              <span className="inline-block px-3 py-1 mb-6 text-xs font-bold tracking-widest uppercase rounded-full bg-primary/10 text-primary">
+              <span className={`inline-block px-3 py-1 mb-6 text-xs font-bold tracking-widest uppercase rounded-full ${eyebrowClass}`}>
                 {content.eyebrow}
               </span>
             )}
-            <h1 className="mb-6 text-4xl md:text-6xl font-extrabold tracking-tight leading-tight">
+            <h1 className={`mb-6 text-4xl md:text-6xl font-extrabold tracking-tight leading-tight ${textToneClass}`}>
               {content.headline}
             </h1>
-            <p className={`mb-10 text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl ${stackedLayout ? "mx-auto" : "mx-auto lg:mx-0"}`}>
+            <p className={`mb-10 text-lg md:text-xl leading-relaxed max-w-2xl ${subheadlineToneClass} ${stackedLayout ? "mx-auto" : "mx-auto lg:mx-0"}`}>
               {content.subheadline}
             </p>
-            <Button asChild size="lg" className="h-14 px-8 text-md font-bold shadow-xl shadow-primary/20">
+            <Button
+              asChild
+              size="lg"
+              variant={backgroundLayout ? "secondary" : "default"}
+              className="h-14 px-8 text-md font-bold shadow-xl shadow-primary/20"
+            >
               <a href={ctaHref}>
                 {content.ctaLabel}
                 <ArrowRight className="ml-2 size-5" />
@@ -145,7 +185,7 @@ function HeroSection({
             </Button>
           </div>
 
-          {hasMedia && (
+          {showMediaPanel && (
             <div className={`flex justify-center ${stackedLayout ? "max-w-5xl mx-auto w-full" : "lg:w-1/2"}`}>
               <div className="relative w-full aspect-video rounded-3xl overflow-hidden shadow-2xl border border-border bg-muted/30 group">
                 {content.videoUrl ? (

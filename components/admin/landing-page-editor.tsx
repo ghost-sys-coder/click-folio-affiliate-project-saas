@@ -139,7 +139,7 @@ export function LandingPageEditor({ landingPage }: LandingPageEditorProps) {
                     id="aiInstructions"
                     value={aiInstructions}
                     onChange={(event) => setAiInstructions(event.target.value)}
-                    placeholder="Examples: Move the hero image to the left, shorten the headline, add a comparison section after benefits, and make the tone more premium."
+                    placeholder="Examples: Turn the hero video into a full background behind the text, shorten the headline, add a comparison section after benefits, and make the tone more premium."
                     className="min-h-32 resize-none bg-background"
                   />
                   <FieldDescription>
@@ -149,6 +149,7 @@ export function LandingPageEditor({ landingPage }: LandingPageEditorProps) {
                 <div className="flex flex-wrap gap-2">
                   {[
                     "Move the hero image to the left and tighten the headline.",
+                    "Turn the hero image into a full background behind the text.",
                     "Turn this into a more premium, high-trust page for professionals.",
                     "Add a comparison section after the benefits section.",
                   ].map((suggestion) => (
@@ -404,7 +405,9 @@ function SectionEditorItem({ section, index }: { section: LandingPageSection; in
                 <Select
                   value={heroMediaLayout}
                   onValueChange={(value) =>
-                    setHeroMediaLayout(value as "left" | "right" | "stacked")
+                    setHeroMediaLayout(
+                      value as "left" | "right" | "stacked" | "background"
+                    )
                   }
                 >
                   <SelectTrigger className="bg-background">
@@ -415,11 +418,12 @@ function SectionEditorItem({ section, index }: { section: LandingPageSection; in
                       <SelectItem value="left">Media left</SelectItem>
                       <SelectItem value="right">Media right</SelectItem>
                       <SelectItem value="stacked">Stacked / centered</SelectItem>
+                      <SelectItem value="background">Background behind text</SelectItem>
                     </SelectGroup>
                   </SelectContent>
                 </Select>
                 <FieldDescription>
-                  This controls whether the hero media sits on the left, right, or below the centered copy.
+                  This controls whether the hero media sits beside the copy, below it, or behind the text as a full-bleed background.
                 </FieldDescription>
               </Field>
             </div>

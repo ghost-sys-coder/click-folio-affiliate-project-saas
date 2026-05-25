@@ -1,7 +1,24 @@
 import { z } from "zod";
 import { appThemes } from "./themes.ts";
 
-export const heroMediaLayouts = ["left", "right", "stacked"] as const;
+export const heroMediaLayouts = ["left", "right", "stacked", "background"] as const;
+
+export function getHeroMediaLayoutMode(
+  mediaLayout: (typeof heroMediaLayouts)[number] | undefined,
+  hasMedia: boolean
+) {
+  const resolvedLayout = mediaLayout ?? "right";
+  const backgroundLayout = resolvedLayout === "background" && hasMedia;
+  const mediaFirst = resolvedLayout === "left";
+  const stackedLayout = (resolvedLayout === "stacked" || !hasMedia) && !backgroundLayout;
+
+  return {
+    backgroundLayout,
+    stackedLayout,
+    mediaFirst,
+    showMediaPanel: hasMedia && !backgroundLayout,
+  };
+}
 
 export const landingPageGoals = [
   "Drive affiliate clicks",
@@ -373,7 +390,8 @@ EDITING RULES:
 - Do not invent product features, testimonials, guarantees, or fake urgency.
 - Preserve affiliate disclosure and risk warnings unless the user explicitly asks to refine them.
 - You may rewrite copy, reorder sections, add supported sections, remove weak sections, and adjust section-level presentation.
-- For hero media placement, use \`mediaLayout\` with one of: \`left\`, \`right\`, or \`stacked\`.
+- For hero media placement, use \`mediaLayout\` with one of: \`left\`, \`right\`, \`stacked\`, or \`background\`.
+- Use \`background\` when the hero image or video should sit behind the copy and fully cover the hero section.
 - If the user asks for a layout change, prefer changing structured fields instead of rewriting unrelated content.
 - Maintain a clear conversion path and a compliant tone.`;
 

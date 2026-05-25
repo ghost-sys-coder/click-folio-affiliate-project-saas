@@ -5,6 +5,7 @@ import {
   buildLandingPageEditPrompt,
 } from "../lib/ai-landing-pages.ts";
 import {
+  getHeroMediaLayoutMode,
   landingPageOutputSchema,
   normalizeLandingPageOutput,
 } from "../lib/landing-pages.ts";
@@ -52,6 +53,49 @@ test("landing page schema supports editable hero media layout", () => {
   assert.equal(hero.content.mediaLayout, "left");
 });
 
+test("landing page schema supports background hero media layout", () => {
+  const parsed = landingPageOutputSchema.parse({
+    sections: [
+      {
+        type: "hero",
+        content: {
+          headline: "Immersive hero",
+          subheadline: "Text can sit over full-bleed media",
+          ctaLabel: "Watch now",
+          videoUrl: "https://example.com/hero.mp4",
+          mediaLayout: "background",
+        },
+      },
+      {
+        type: "problem",
+        content: {
+          title: "Static layouts feel limited",
+          body: "You cannot turn the hero media into a full section background.",
+          bullets: ["Needs more art direction flexibility"],
+        },
+      },
+      {
+        type: "finalCta",
+        content: {
+          headline: "Make it cinematic",
+          body: "Use the background layout when you need atmosphere.",
+          ctaLabel: "Create page",
+        },
+      },
+    ],
+    disclosure: "Affiliate disclosure text",
+    riskWarnings: ["Check the product page for final details."],
+    seo: {
+      title: "Background hero page",
+      description: "A page with full-bleed hero media.",
+    },
+  });
+
+  const hero = parsed.sections[0];
+  assert.equal(hero.type, "hero");
+  assert.equal(hero.content.mediaLayout, "background");
+});
+
 test("normalizes legacy landing page output into section-based output", () => {
   const normalized = normalizeLandingPageOutput({
     hero: {
@@ -86,6 +130,15 @@ test("normalizes legacy landing page output into section-based output", () => {
       : undefined,
     "right"
   );
+});
+
+test("background hero layout uses overlay mode instead of side-by-side media", () => {
+  assert.deepEqual(getHeroMediaLayoutMode("background", true), {
+    backgroundLayout: true,
+    stackedLayout: false,
+    mediaFirst: false,
+    showMediaPanel: false,
+  });
 });
 
 test("builds an AI edit prompt from current output and requested change", () => {
@@ -145,4 +198,5 @@ test("builds an AI edit prompt from current output and requested change", () => 
   assert.match(prompt.userPrompt, /Current headline/);
   assert.match(prompt.userPrompt, /mediaLayout/);
   assert.match(prompt.systemPrompt, /editor/i);
+  assert.match(prompt.systemPrompt, /background/);
 });
