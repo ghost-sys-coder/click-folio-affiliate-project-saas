@@ -1,4 +1,5 @@
-import { PlanKey, plans } from "@/lib/plans";
+import { plans } from "../lib/plans.ts";
+import type { PlanKey } from "../lib/plans.ts";
 
 export function getPlanLimits(planKey: PlanKey) {
     return plans[planKey] ?? plans.trial; // Fallback to trial limits if planKey is invalid
@@ -48,6 +49,48 @@ export function canGenerateContent(params: {plan: PlanKey, currentMonthlyGenerat
         limit: limits.maxContentGenerations,
         remaining,
     }
+}
+
+export function canGenerateLandingPage(params: { plan: PlanKey; currentMonthlyGenerationCount: number }) {
+    const limits = getPlanLimits(params.plan);
+    const remaining = Math.max(
+        limits.maxLandingPageGenerations - params.currentMonthlyGenerationCount,
+        0
+    );
+
+    return {
+        allowed: params.currentMonthlyGenerationCount < limits.maxLandingPageGenerations,
+        limit: limits.maxLandingPageGenerations,
+        remaining,
+    };
+}
+
+export function canApplyLandingPageAiEdit(params: { plan: PlanKey; currentMonthlyAiEditCount: number }) {
+    const limits = getPlanLimits(params.plan);
+    const remaining = Math.max(
+        limits.maxLandingPageAIEdits - params.currentMonthlyAiEditCount,
+        0
+    );
+
+    return {
+        allowed: params.currentMonthlyAiEditCount < limits.maxLandingPageAIEdits,
+        limit: limits.maxLandingPageAIEdits,
+        remaining,
+    };
+}
+
+export function canPublishLandingPage(params: { plan: PlanKey; currentPublishedLandingPagesCount: number }) {
+    const limits = getPlanLimits(params.plan);
+    const remaining = Math.max(
+        limits.maxPublishedLandingPages - params.currentPublishedLandingPagesCount,
+        0
+    );
+
+    return {
+        allowed: params.currentPublishedLandingPagesCount < limits.maxPublishedLandingPages,
+        limit: limits.maxPublishedLandingPages,
+        remaining,
+    };
 }
 
 export function getAnalyticsLevel(planKey: PlanKey) {

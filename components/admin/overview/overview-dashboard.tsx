@@ -7,15 +7,13 @@ import { RecommendedActions } from "./recommended-actions";
 import type { UserPlan } from "@/lib/subscriptions";
 import type { Profile } from "@/db/schema";
 import type { AnalyticsGroup, ClickSummary, RecentClick, TopLink } from "@/db/analytics";
+import type { UsageSummary } from "@/lib/usage";
 
 type OverviewDashboardProps = {
   profile: Profile;
   userEmail: string;
   userPlan: UserPlan;
-  usage: {
-    monthlyContentGenerations: number;
-    totalAffiliateLinks: number;
-  };
+  usage: UsageSummary;
   analytics: {
     summary: ClickSummary;
     topLinks: TopLink[];
@@ -85,8 +83,7 @@ export function OverviewDashboard({
           
           <UsageLimitsCard 
             userPlan={userPlan}
-            monthlyContentGenerations={usage.monthlyContentGenerations}
-            totalAffiliateLinks={usage.totalAffiliateLinks}
+            usage={usage}
             referenceDate={referenceDate}
           />
         </div>

@@ -5,10 +5,16 @@ interface PlanLimits {
     label: string;
     trialDays?: number;
     priceMonthly?: number;
+
     maxProfiles: number;
     maxAffiliateLinks: number | null; // null means unlimited
     maxImportRowsPerUpload: number;
     maxContentGenerations: number;
+
+    maxPublishedLandingPages: number;
+    maxLandingPageGenerations: number;
+    maxLandingPageAIEdits: number;
+
     campaignUrlBuilder: boolean;
     analyticsLevel: AnalyticsLevel;
     clickHistoryDays: number | string; // number of days or "unlimited"
@@ -25,10 +31,17 @@ export const plans: Record<PlanKey, PlanLimits> = {
     trial: {
         label: "Trial",
         trialDays: 7,
+
         maxProfiles: 1,
         maxAffiliateLinks: 10,
         maxImportRowsPerUpload: 50,
         maxContentGenerations: 25,
+
+        // landing page limits
+        maxPublishedLandingPages: 3,
+        maxLandingPageGenerations: 3,
+        maxLandingPageAIEdits: 5,
+
         campaignUrlBuilder: true,
         analyticsLevel: "basic",
         clickHistoryDays: 7,
@@ -43,9 +56,17 @@ export const plans: Record<PlanKey, PlanLimits> = {
         label: "Starter",
         priceMonthly: 9,
         maxProfiles: 1,
+
+
         maxAffiliateLinks: 25,
         maxImportRowsPerUpload: 100,
         maxContentGenerations: 25,
+
+        // landing page limits
+        maxPublishedLandingPages: 5,
+        maxLandingPageGenerations: 10,
+        maxLandingPageAIEdits: 25,
+
         campaignUrlBuilder: true,
         analyticsLevel: "basic",
         clickHistoryDays: 30,
@@ -60,9 +81,16 @@ export const plans: Record<PlanKey, PlanLimits> = {
         label: "Pro",
         priceMonthly: 29,
         maxProfiles: 1,
+
         maxAffiliateLinks: null,
         maxImportRowsPerUpload: 500,
         maxContentGenerations: 150,
+
+        // landing page limits
+        maxPublishedLandingPages: 25,
+        maxLandingPageGenerations: 50,
+        maxLandingPageAIEdits: 100,
+
         campaignUrlBuilder: true,
         analyticsLevel: "advanced",
         clickHistoryDays: 365,
@@ -77,9 +105,16 @@ export const plans: Record<PlanKey, PlanLimits> = {
         label: "Creator Plus",
         priceMonthly: 59,
         maxProfiles: 1,
+
         maxAffiliateLinks: null,
         maxImportRowsPerUpload: 1000,
         maxContentGenerations: 500,
+
+        // landing page limits
+        maxPublishedLandingPages: 75,
+        maxLandingPageGenerations: 125,
+        maxLandingPageAIEdits: 350,
+
         campaignUrlBuilder: true,
         analyticsLevel: "premium",
         clickHistoryDays: "unlimited",

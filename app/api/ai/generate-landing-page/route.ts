@@ -5,10 +5,13 @@ import { createLandingPageDraft } from "@/db/landing-pages";
 import { getProfileByUserId } from "@/db/profiles";
 import { generateLandingPageContent } from "@/lib/ai-landing-pages";
 import { landingPageGenerationSchema } from "@/lib/landing-pages";
-import { canGenerateContent } from "@/lib/plans";
 import { getCurrentUserPlan } from "@/lib/subscriptions";
-import { getMonthlyContentGenerationCount, recordUsageEvent } from "@/lib/usage";
+import {
+  getMonthlyLandingPageGenerationCount,
+  recordUsageEvent,
+} from "@/lib/usage";
 import { slugify } from "@/lib/utils";
+import { canGenerateLandingPage } from "@/utils/plans-helpers";
 
 export const dynamic = "force-dynamic";
 
@@ -31,11 +34,18 @@ export async function POST(request: Request) {
     );
   }
 
-  const monthlyCount = await getMonthlyContentGenerationCount(userPlan.userId);
+  const generationAccess = canGenerateLandingPage({
+    plan: userPlan.plan,
+    currentMonthlyGenerationCount: await getMonthlyLandingPageGenerationCount(
+      userPlan.userId
+    ),
+  });
 
-  if (!canGenerateContent(monthlyCount, userPlan.plan)) {
+  if (!generationAccess.allowed) {
     return NextResponse.json(
-      { error: "Monthly generation limit reached." },
+      {
+        error: `Monthly landing page generation limit reached (${generationAccess.limit} per month on ${userPlan.limits.label}).`,
+      },
       { status: 403 }
     );
   }

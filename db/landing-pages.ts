@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 
 import { getDb } from "@/db/drizzle";
 import {
@@ -13,6 +13,22 @@ export async function getLandingPagesForUser(userId: string) {
     .from(generatedLandingPagesTable)
     .where(eq(generatedLandingPagesTable.userId, userId))
     .orderBy(generatedLandingPagesTable.createdAt);
+}
+
+export async function getPublishedLandingPagesCount(userId: string) {
+  const [result] = await getDb()
+    .select({
+      count: sql<number>`count(*)`,
+    })
+    .from(generatedLandingPagesTable)
+    .where(
+      and(
+        eq(generatedLandingPagesTable.userId, userId),
+        eq(generatedLandingPagesTable.status, "published")
+      )
+    );
+
+  return result?.count ?? 0;
 }
 
 export async function getLandingPageById(id: string, userId: string) {

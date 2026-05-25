@@ -1,13 +1,18 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getLandingPageById, updateLandingPage } from "@/db/landing-pages";
+import {
+  getLandingPageById,
+  getPublishedLandingPagesCount,
+  updateLandingPage,
+} from "@/db/landing-pages";
 import { getCurrentUserPlan } from "@/lib/subscriptions";
 import {
   normalizeLandingPageOutput,
   type LandingPageOutput,
   type LandingPageSection,
 } from "@/lib/landing-pages";
+import { canPublishLandingPage } from "@/utils/plans-helpers";
 
 export type LandingPageUpdateState = {
   success: boolean;
@@ -31,7 +36,7 @@ export async function updateLandingPageAction(prevState: LandingPageUpdateState,
   // Generic helper to update nested objects in sections
   const updatedSections = currentSections.map((section, index) => {
     const sectionPrefix = `section.${index}.`;
-    const newContent = { ...section.content } as any;
+    const newContent = { ...section.content } as Record<string, unknown>;
 
     // Iterate through all keys in the current section's content
     Object.keys(newContent).forEach(key => {
@@ -92,13 +97,28 @@ export async function publishLandingPageAction(id: string) {
   if (!planResult.ok) return { success: false, message: "Unauthorized." };
 
   try {
+    const currentPublishedLandingPagesCount = await getPublishedLandingPagesCount(
+      planResult.plan.userId
+    );
+    const publishAccess = canPublishLandingPage({
+      plan: planResult.plan.plan,
+      currentPublishedLandingPagesCount,
+    });
+
+    if (!publishAccess.allowed) {
+      return {
+        success: false,
+        message: `Published landing page limit reached (${publishAccess.limit} on ${planResult.plan.limits.label}).`,
+      };
+    }
+
     await updateLandingPage(id, planResult.plan.userId, {
       status: "published",
       publishedAt: new Date(),
     });
     revalidatePath("/admin/landing-pages");
     return { success: true, message: "Page published." };
-  } catch (_error) {
+  } catch {
     return { success: false, message: "Publishing failed." };
   }
 }
@@ -113,7 +133,7 @@ export async function unpublishLandingPageAction(id: string) {
     });
     revalidatePath("/admin/landing-pages");
     return { success: true, message: "Page unpublished." };
-  } catch (_error) {
+  } catch {
     return { success: false, message: "Operation failed." };
   }
 }
@@ -128,7 +148,7 @@ export async function archiveLandingPageAction(id: string) {
     });
     revalidatePath("/admin/landing-pages");
     return { success: true, message: "Page archived." };
-  } catch (_error) {
+  } catch {
     return { success: false, message: "Archiving failed." };
   }
 }

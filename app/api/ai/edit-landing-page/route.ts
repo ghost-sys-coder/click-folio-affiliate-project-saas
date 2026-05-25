@@ -9,6 +9,8 @@ import {
   normalizeLandingPageOutput,
 } from "@/lib/landing-pages";
 import { getCurrentUserPlan } from "@/lib/subscriptions";
+import { getMonthlyLandingPageAiEditCount, recordUsageEvent } from "@/lib/usage";
+import { canApplyLandingPageAiEdit } from "@/utils/plans-helpers";
 
 export const dynamic = "force-dynamic";
 
@@ -24,9 +26,25 @@ export async function POST(request: Request) {
 
   const userPlan = planResult.plan;
 
+  const aiEditAccess = canApplyLandingPageAiEdit({
+    plan: userPlan.plan,
+    currentMonthlyAiEditCount: await getMonthlyLandingPageAiEditCount(
+      userPlan.userId
+    ),
+  });
+
   if (userPlan.status === "expired") {
     return NextResponse.json(
       { error: "Your trial has expired. Upgrade to continue." },
+      { status: 403 }
+    );
+  }
+
+  if (!aiEditAccess.allowed) {
+    return NextResponse.json(
+      {
+        error: `Monthly landing page AI edit limit reached (${aiEditAccess.limit} per month on ${userPlan.limits.label}).`,
+      },
       { status: 403 }
     );
   }
@@ -105,6 +123,11 @@ export async function POST(request: Request) {
         seoDescription: result.output.seo.description,
       }
     );
+
+    await recordUsageEvent(userPlan.userId, "landing_page_ai_edit", {
+      provider: result.provider,
+      landingPageId: landingPage.id,
+    });
 
     return NextResponse.json({
       id: updatedLandingPage?.id ?? landingPage.id,

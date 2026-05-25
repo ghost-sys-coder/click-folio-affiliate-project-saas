@@ -212,6 +212,7 @@ export const usageEventTypeEnum = pgEnum("usage_event_type", [
   "affiliate_link_imported",
   "campaign_url_generated",
   "landing_page_generated",
+  "landing_page_ai_edit",
 ]);
 
 export const usageEventsTable = pgTable("usage_events", {

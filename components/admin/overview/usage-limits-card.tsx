@@ -5,28 +5,44 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import type { UserPlan } from "@/lib/subscriptions";
+import type { UsageSummary } from "@/lib/usage";
 
 type UsageLimitsCardProps = {
   userPlan: UserPlan;
-  monthlyContentGenerations: number;
-  totalAffiliateLinks: number;
+  usage: UsageSummary;
   referenceDate?: Date;
 };
 
 export function UsageLimitsCard({
   userPlan,
-  monthlyContentGenerations,
-  totalAffiliateLinks,
+  usage,
   referenceDate = new Date(),
 }: UsageLimitsCardProps) {
   const { limits, status, trialEndsAt } = userPlan;
 
-  const contentGenPercent = Math.min(100, (monthlyContentGenerations / limits.maxContentGenerations) * 100);
-  const linksPercent = limits.maxAffiliateLinks 
-    ? Math.min(100, (totalAffiliateLinks / limits.maxAffiliateLinks) * 100)
+  const contentGenPercent = Math.min(
+    100,
+    (usage.monthlyContentGenerations / limits.maxContentGenerations) * 100
+  );
+  const linksPercent = limits.maxAffiliateLinks
+    ? Math.min(100, (usage.totalAffiliateLinks / limits.maxAffiliateLinks) * 100)
     : 0;
+  const landingPageGenerationPercent = Math.min(
+    100,
+    (usage.monthlyLandingPageGenerations / limits.maxLandingPageGenerations) * 100
+  );
+  const landingPageAiEditsPercent = Math.min(
+    100,
+    (usage.monthlyLandingPageAiEdits / limits.maxLandingPageAIEdits) * 100
+  );
+  const publishedLandingPagesPercent = Math.min(
+    100,
+    (usage.publishedLandingPages / limits.maxPublishedLandingPages) * 100
+  );
 
-  const isExpiringSoon = status === "trialing" && (trialEndsAt.getTime() - referenceDate.getTime()) < 2 * 24 * 60 * 60 * 1000;
+  const isExpiringSoon =
+    status === "trialing" &&
+    trialEndsAt.getTime() - referenceDate.getTime() < 2 * 24 * 60 * 60 * 1000;
 
   return (
     <Card className="border-border/60 shadow-sm">
@@ -38,25 +54,40 @@ export function UsageLimitsCard({
         <CardDescription>Your current consumption and limits.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6 pt-6">
-        <div className="space-y-2">
-          <div className="flex items-center justify-between text-sm">
-            <span className="font-medium">AI Content Generations</span>
-            <span className="text-muted-foreground">
-              {monthlyContentGenerations} / {limits.maxContentGenerations}
-            </span>
-          </div>
-          <Progress value={contentGenPercent} className="h-1.5" />
-        </div>
+        <UsageRow
+          label="AI Content Generations"
+          value={usage.monthlyContentGenerations}
+          limit={limits.maxContentGenerations}
+          progress={contentGenPercent}
+        />
 
-        <div className="space-y-2">
-          <div className="flex items-center justify-between text-sm">
-            <span className="font-medium">Affiliate Links</span>
-            <span className="text-muted-foreground">
-              {totalAffiliateLinks} / {limits.maxAffiliateLinks || '∞'}
-            </span>
-          </div>
-          <Progress value={linksPercent} className="h-1.5" />
-        </div>
+        <UsageRow
+          label="Affiliate Links"
+          value={usage.totalAffiliateLinks}
+          limit={limits.maxAffiliateLinks ?? "Unlimited"}
+          progress={linksPercent}
+        />
+
+        <UsageRow
+          label="Landing Page Generations"
+          value={usage.monthlyLandingPageGenerations}
+          limit={limits.maxLandingPageGenerations}
+          progress={landingPageGenerationPercent}
+        />
+
+        <UsageRow
+          label="Landing Page AI Edits"
+          value={usage.monthlyLandingPageAiEdits}
+          limit={limits.maxLandingPageAIEdits}
+          progress={landingPageAiEditsPercent}
+        />
+
+        <UsageRow
+          label="Published Landing Pages"
+          value={usage.publishedLandingPages}
+          limit={limits.maxPublishedLandingPages}
+          progress={publishedLandingPagesPercent}
+        />
 
         <div className="grid gap-3 rounded-lg border border-border bg-muted/20 p-3 text-xs">
           <div className="flex items-center justify-between">
@@ -70,7 +101,7 @@ export function UsageLimitsCard({
           {status === "trialing" && (
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">Trial Ends</span>
-              <span className={`font-medium ${isExpiringSoon ? 'text-destructive' : ''}`}>
+              <span className={`font-medium ${isExpiringSoon ? "text-destructive" : ""}`}>
                 {trialEndsAt.toLocaleDateString()}
               </span>
             </div>
@@ -95,5 +126,29 @@ export function UsageLimitsCard({
         )}
       </CardContent>
     </Card>
+  );
+}
+
+function UsageRow({
+  label,
+  value,
+  limit,
+  progress,
+}: {
+  label: string;
+  value: number;
+  limit: number | string;
+  progress: number;
+}) {
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between text-sm">
+        <span className="font-medium">{label}</span>
+        <span className="text-muted-foreground">
+          {value} / {limit}
+        </span>
+      </div>
+      <Progress value={progress} className="h-1.5" />
+    </div>
   );
 }
