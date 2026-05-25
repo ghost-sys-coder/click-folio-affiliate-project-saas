@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 
 import {
   appThemes,
@@ -354,4 +355,25 @@ test("landing page generation schema accepts the new theme options", () => {
 
   assert.equal(oceanTheme.theme, appThemes.oceanCyan);
   assert.equal(sunsetTheme.theme, appThemes.sunsetCoral);
+});
+
+test("landing page editor exposes a preview link to the preview route", async () => {
+  const source = await readFile(
+    new URL("../components/admin/landing-page-editor.tsx", import.meta.url),
+    "utf8"
+  );
+
+  assert.match(source, /href=\{`\/admin\/landing-pages\/\$\{landingPage\.id\}\/preview`\}/);
+  assert.match(source, />\s*Preview\s*</);
+});
+
+test("landing page editor exposes a copy public url action", async () => {
+  const source = await readFile(
+    new URL("../components/admin/landing-page-editor.tsx", import.meta.url),
+    "utf8"
+  );
+
+  assert.match(source, /navigator\.clipboard\.writeText/);
+  assert.match(source, /toast\.success\("Public URL copied to clipboard"\)/);
+  assert.match(source, /\/l\/\$\{username\}\/\$\{landingPage\.slug\}/);
 });

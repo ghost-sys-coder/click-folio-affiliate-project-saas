@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 
 import { LandingPageEditor } from "@/components/admin/landing-page-editor";
 import { getLandingPageById } from "@/db/landing-pages";
+import { getProfileByUserId } from "@/db/profiles";
 import { getCurrentUserPlan } from "@/lib/subscriptions";
 
 export const metadata: Metadata = {
@@ -22,10 +23,11 @@ export default async function EditLandingPagePage({
   }
 
   const landingPage = await getLandingPageById(id, planResult.plan.userId);
+  const profile = await getProfileByUserId(planResult.plan.userId);
 
-  if (!landingPage) {
+  if (!landingPage || !profile) {
     notFound();
   }
 
-  return <LandingPageEditor landingPage={landingPage} />;
+  return <LandingPageEditor landingPage={landingPage} username={profile.username} />;
 }

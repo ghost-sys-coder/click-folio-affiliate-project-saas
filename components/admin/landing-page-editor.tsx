@@ -1,8 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Sparkles, Save, Type, Layout, List, HelpCircle, CheckCircle, AlertCircle, Repeat, Plus, Trash2 } from "lucide-react";
+import { Loader2, Sparkles, Save, Eye, Copy, Type, Layout, List, HelpCircle, CheckCircle, AlertCircle, Repeat, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { updateLandingPageAction } from "@/actions/landing-pages";
@@ -38,12 +39,14 @@ import {
   normalizeLandingPageOutput,
   type LandingPageSection,
 } from "@/lib/landing-pages";
+import { getBaseUrl } from "@/lib/utils";
 
 type LandingPageEditorProps = {
   landingPage: GeneratedLandingPage;
+  username: string;
 };
 
-export function LandingPageEditor({ landingPage }: LandingPageEditorProps) {
+export function LandingPageEditor({ landingPage, username }: LandingPageEditorProps) {
   const router = useRouter();
   const [state, formAction, isPending] = useActionState(updateLandingPageAction, {
     success: false,
@@ -121,6 +124,12 @@ export function LandingPageEditor({ landingPage }: LandingPageEditorProps) {
     setNewSections((current) => current.filter((entry) => entry.id !== id));
   }
 
+  function copyPublicUrl() {
+    const url = `${getBaseUrl()}/l/${username}/${landingPage.slug}`;
+    navigator.clipboard.writeText(url);
+    toast.success("Public URL copied to clipboard");
+  }
+
   return (
     <form action={formAction} className="space-y-8 pb-10">
       <input type="hidden" name="id" value={landingPage.id} />
@@ -133,14 +142,26 @@ export function LandingPageEditor({ landingPage }: LandingPageEditorProps) {
             Refine the generated copy and SEO settings for your page.
           </p>
         </div>
-        <Button type="submit" disabled={isPending} className="px-8 shadow-lg shadow-primary/20">
-          {isPending ? (
-            <Loader2 className="mr-2 size-4 animate-spin" />
-          ) : (
-            <Save className="mr-2 size-4" />
-          )}
-          Save Changes
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button type="button" variant="outline" onClick={copyPublicUrl}>
+            <Copy className="mr-2 size-4" />
+            Copy Public URL
+          </Button>
+          <Button asChild type="button" variant="outline">
+            <Link href={`/admin/landing-pages/${landingPage.id}/preview`}>
+              <Eye className="mr-2 size-4" />
+              Preview
+            </Link>
+          </Button>
+          <Button type="submit" disabled={isPending} className="px-8 shadow-lg shadow-primary/20">
+            {isPending ? (
+              <Loader2 className="mr-2 size-4 animate-spin" />
+            ) : (
+              <Save className="mr-2 size-4" />
+            )}
+            Save Changes
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-8 lg:grid-cols-3">
