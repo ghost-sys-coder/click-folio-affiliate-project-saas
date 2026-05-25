@@ -8,9 +8,9 @@ import {
 } from "@/db/landing-pages";
 import { getCurrentUserPlan } from "@/lib/subscriptions";
 import {
+  hydrateLandingPageSectionsFromForm,
   normalizeLandingPageOutput,
   type LandingPageOutput,
-  type LandingPageSection,
 } from "@/lib/landing-pages";
 import { canPublishLandingPage } from "@/utils/plans-helpers";
 
@@ -31,37 +31,10 @@ export async function updateLandingPageAction(prevState: LandingPageUpdateState,
   if (!existing) return { success: false, message: "Landing page not found." };
 
   const output = normalizeLandingPageOutput(existing.outputJson);
-  const currentSections = output.sections;
-
-  // Generic helper to update nested objects in sections
-  const updatedSections = currentSections.map((section, index) => {
-    const sectionPrefix = `section.${index}.`;
-    const newContent = { ...section.content } as Record<string, unknown>;
-
-    // Iterate through all keys in the current section's content
-    Object.keys(newContent).forEach(key => {
-      const formValue = formData.get(`${sectionPrefix}${key}`);
-      
-      if (formValue !== null) {
-        // Handle special cases (arrays, booleans)
-        if (key === "bullets" || key === "perfectForItems" || key === "notForItems") {
-          newContent[key] = (formValue as string).split("\n").filter(Boolean);
-        } else if (key === "items" || key === "rows" || key === "steps") {
-          // These complex nested structures are harder to parse from flat FormData
-          // preserved as is for now
-        } else if (typeof newContent[key] === "boolean") {
-          newContent[key] = formValue === "true";
-        } else {
-          newContent[key] = formValue as string;
-        }
-      }
-    });
-
-    return {
-      ...section,
-      content: newContent,
-    };
-  }) as LandingPageSection[];
+  const updatedSections = hydrateLandingPageSectionsFromForm({
+    existingSections: output.sections,
+    formData,
+  });
 
   const updatedOutput: LandingPageOutput = {
     ...output,
