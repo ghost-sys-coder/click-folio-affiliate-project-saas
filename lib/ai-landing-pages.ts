@@ -1,10 +1,11 @@
 import {
   getLandingPageJsonSchema,
+  landingPageEditSystemPrompt,
   landingPageOutputSchema,
   landingPageSystemPrompt,
   type LandingPageGenerationInput,
   type LandingPageOutput,
-} from "./landing-pages";
+} from "./landing-pages.ts";
 
 export type LandingPageAIProvider = "openai" | "gemini";
 
@@ -78,6 +79,52 @@ export async function generateLandingPageContent(input: {
     : new Error("Landing page generation failed.");
 }
 
+export async function editLandingPageContent(input: {
+  instructions: string;
+  currentOutput: LandingPageOutput;
+  profile: {
+    displayName: string;
+    username: string;
+    bio: string | null;
+    targetAudience: string;
+    disclosureText: string;
+  };
+  link: {
+    title: string;
+    description: string | null;
+    destinationUrl: string;
+  };
+}) {
+  const prompt = buildLandingPageEditPrompt(input);
+  const providers = getLandingPageAIProviderOrder();
+  let lastError: unknown = null;
+
+  if (providers.length === 0) {
+    throw new Error("No landing page AI provider is configured.");
+  }
+
+  for (const provider of providers) {
+    try {
+      const rawJson =
+        provider === "openai"
+          ? await callOpenAILandingPage(prompt, "landing_page_edit")
+          : await callGeminiLandingPage(prompt);
+
+      return {
+        provider,
+        output: parseLandingPageJson(rawJson),
+      };
+    } catch (error) {
+      console.error(`Landing page editing with ${provider} failed`, error);
+      lastError = error;
+    }
+  }
+
+  throw lastError instanceof Error
+    ? lastError
+    : new Error("Landing page editing failed.");
+}
+
 function buildLandingPagePrompt(input: {
   request: LandingPageGenerationInput;
   profile: {
@@ -138,7 +185,58 @@ function buildLandingPagePrompt(input: {
   };
 }
 
-async function callOpenAILandingPage(prompt: { systemPrompt: string; userPrompt: string }) {
+export function buildLandingPageEditPrompt(input: {
+  instructions: string;
+  currentOutput: LandingPageOutput;
+  profile: {
+    displayName: string;
+    username: string;
+    bio: string | null;
+    targetAudience: string;
+    disclosureText: string;
+  };
+  link: {
+    title: string;
+    description: string | null;
+    destinationUrl: string;
+  };
+}) {
+  const { instructions, currentOutput, profile, link } = input;
+
+  return {
+    systemPrompt: landingPageEditSystemPrompt,
+    userPrompt: [
+      "Edit the existing landing page JSON using the instruction below.",
+      "",
+      "User edit request:",
+      instructions,
+      "",
+      "Profile Context:",
+      `- Display name: ${profile.displayName}`,
+      `- Username: @${profile.username}`,
+      profile.bio ? `- Bio: ${profile.bio}` : null,
+      `- Default target audience: ${profile.targetAudience}`,
+      `- Standard disclosure: ${profile.disclosureText}`,
+      "",
+      "Product/Offer Details:",
+      `- Product Title: ${link.title}`,
+      link.description ? `- Description: ${link.description}` : null,
+      `- Destination Host: ${new URL(link.destinationUrl).host}`,
+      "",
+      "Current landing page JSON:",
+      JSON.stringify(currentOutput, null, 2),
+      "",
+      "Return the full updated JSON document only.",
+    ]
+      .filter(Boolean)
+      .join("\n"),
+  };
+}
+
+async function callOpenAILandingPage(
+  prompt: { systemPrompt: string; userPrompt: string },
+  schemaName = "landing_page_generation"
+) {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) throw new Error("OpenAI API key missing.");
 
@@ -159,7 +257,7 @@ async function callOpenAILandingPage(prompt: { systemPrompt: string; userPrompt:
       text: {
         format: {
           type: "json_schema",
-          name: "landing_page_generation",
+          name: schemaName,
           strict: true,
           schema: getLandingPageJsonSchema(),
         },

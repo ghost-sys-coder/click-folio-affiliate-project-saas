@@ -1,5 +1,7 @@
 import { z } from "zod";
-import { appThemes } from "./themes";
+import { appThemes } from "./themes.ts";
+
+export const heroMediaLayouts = ["left", "right", "stacked"] as const;
 
 export const landingPageGoals = [
   "Drive affiliate clicks",
@@ -53,6 +55,17 @@ export const landingPageGenerationSchema = z.object({
 
 export type LandingPageGenerationInput = z.infer<typeof landingPageGenerationSchema>;
 
+export const landingPageEditSchema = z.object({
+  landingPageId: z.string().uuid("Invalid landing page ID."),
+  instructions: z
+    .string()
+    .trim()
+    .min(10, "Describe the edit in at least 10 characters.")
+    .max(2000, "Edit instructions must be 2000 characters or fewer."),
+});
+
+export type LandingPageEditInput = z.infer<typeof landingPageEditSchema>;
+
 // Shared content schemas
 const titleDescriptionSchema = z.object({
   title: z.string().trim().min(1),
@@ -69,6 +82,7 @@ export const heroSectionSchema = z.object({
     ctaLabel: z.string().trim().min(1),
     imageUrl: z.string().trim().optional(),
     videoUrl: z.string().trim().optional(),
+    mediaLayout: z.enum(heroMediaLayouts).default("right"),
   }),
 });
 
@@ -197,6 +211,126 @@ export const landingPageOutputSchema = z.object({
 
 export type LandingPageOutput = z.infer<typeof landingPageOutputSchema>;
 
+type LegacyLandingPageOutput = {
+  hero?: Record<string, unknown>;
+  problem?: Record<string, unknown>;
+  solution?: Record<string, unknown>;
+  benefits?: Array<{ title: string; description: string }>;
+  productHighlights?: Array<{ title: string; description: string }>;
+  whoItIsFor?: string[];
+  whoItIsNotFor?: string[];
+  useCases?: Array<{ title: string; description: string }>;
+  faq?: Array<{ question: string; answer: string }>;
+  finalCta?: Record<string, unknown>;
+  disclosure?: string;
+  riskWarnings?: string[];
+  seo?: { title?: string; description?: string };
+  sections?: LandingPageSection[];
+};
+
+export function normalizeLandingPageOutput(value: unknown): LandingPageOutput {
+  const directResult = landingPageOutputSchema.safeParse(value);
+
+  if (directResult.success) {
+    return directResult.data;
+  }
+
+  const legacyData = (value ?? {}) as LegacyLandingPageOutput;
+  const sections =
+    legacyData.sections ||
+    ([
+    legacyData.hero
+      ? {
+          type: "hero" as const,
+          content: {
+            ...legacyData.hero,
+            mediaLayout:
+              typeof legacyData.hero.mediaLayout === "string" &&
+              heroMediaLayouts.includes(
+                legacyData.hero.mediaLayout as (typeof heroMediaLayouts)[number]
+              )
+                ? legacyData.hero.mediaLayout
+                : "right",
+          },
+        }
+      : null,
+    legacyData.problem
+      ? { type: "problem" as const, content: legacyData.problem }
+      : null,
+    legacyData.solution
+      ? { type: "solution" as const, content: legacyData.solution }
+      : null,
+    legacyData.benefits
+      ? {
+          type: "benefits" as const,
+          content: { title: "Why Choose This?", items: legacyData.benefits },
+        }
+      : null,
+    legacyData.productHighlights
+      ? {
+          type: "productHighlights" as const,
+          content: {
+            title: "Key Features",
+            items: legacyData.productHighlights,
+          },
+        }
+      : null,
+    legacyData.whoItIsFor || legacyData.whoItIsNotFor
+      ? {
+          type: "audience" as const,
+          content: {
+            perfectForTitle: "Perfect For",
+            perfectForItems: legacyData.whoItIsFor ?? [],
+            notForTitle: "Not For You If",
+            notForItems: legacyData.whoItIsNotFor ?? [],
+          },
+        }
+      : null,
+    legacyData.useCases
+      ? {
+          type: "useCases" as const,
+          content: {
+            title: "Real World Applications",
+            items: legacyData.useCases,
+          },
+        }
+      : null,
+    legacyData.faq
+      ? {
+          type: "faq" as const,
+          content: {
+            title: "Common Questions",
+            items: legacyData.faq,
+          },
+        }
+      : null,
+    legacyData.finalCta
+      ? { type: "finalCta" as const, content: legacyData.finalCta }
+      : null,
+  ] satisfies Array<unknown | null>).filter(Boolean);
+
+  return landingPageOutputSchema.parse({
+    sections,
+    disclosure:
+      typeof legacyData.disclosure === "string"
+        ? legacyData.disclosure
+        : "Some links on this page may earn me a commission at no extra cost to you.",
+    riskWarnings: Array.isArray(legacyData.riskWarnings)
+      ? legacyData.riskWarnings
+      : [],
+    seo: {
+      title:
+        typeof legacyData.seo?.title === "string"
+          ? legacyData.seo.title
+          : "Affiliate Landing Page",
+      description:
+        typeof legacyData.seo?.description === "string"
+          ? legacyData.seo.description
+          : "Explore this affiliate recommendation page.",
+    },
+  });
+}
+
 export const landingPageSystemPrompt = `You are Clickfolio Landing Page Designer, an affiliate marketing expert.
 
 Your goal is to design a high-converting, component-based landing page for an affiliate product.
@@ -227,6 +361,22 @@ STRATEGY RULES:
 
 Return structured JSON matching the requested block-based schema.`;
 
+export const landingPageEditSystemPrompt = `You are Clickfolio Landing Page Editor, an affiliate marketing editor and layout assistant.
+
+You receive an existing structured landing page JSON document and a user instruction.
+
+Your job is to edit the existing page while preserving what already works.
+
+EDITING RULES:
+- Return the full landing page JSON, not a diff.
+- Keep the JSON valid for the provided schema.
+- Do not invent product features, testimonials, guarantees, or fake urgency.
+- Preserve affiliate disclosure and risk warnings unless the user explicitly asks to refine them.
+- You may rewrite copy, reorder sections, add supported sections, remove weak sections, and adjust section-level presentation.
+- For hero media placement, use \`mediaLayout\` with one of: \`left\`, \`right\`, or \`stacked\`.
+- If the user asks for a layout change, prefer changing structured fields instead of rewriting unrelated content.
+- Maintain a clear conversion path and a compliant tone.`;
+
 export function getLandingPageJsonSchema() {
   return {
     type: "object",
@@ -252,6 +402,7 @@ export function getLandingPageJsonSchema() {
                     ctaLabel: { type: "string" },
                     imageUrl: { type: "string" },
                     videoUrl: { type: "string" },
+                    mediaLayout: { type: "string", enum: [...heroMediaLayouts] },
                   },
                 },
               },

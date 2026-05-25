@@ -3,7 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { getLandingPageById, updateLandingPage } from "@/db/landing-pages";
 import { getCurrentUserPlan } from "@/lib/subscriptions";
-import type { LandingPageOutput, LandingPageSection } from "@/lib/landing-pages";
+import {
+  normalizeLandingPageOutput,
+  type LandingPageOutput,
+  type LandingPageSection,
+} from "@/lib/landing-pages";
 
 export type LandingPageUpdateState = {
   success: boolean;
@@ -21,26 +25,8 @@ export async function updateLandingPageAction(prevState: LandingPageUpdateState,
   const existing = await getLandingPageById(id, userId);
   if (!existing) return { success: false, message: "Landing page not found." };
 
-  const output = existing.outputJson as LandingPageOutput;
-  const legacyData = output as any;
-
-  // Ensure we have sections (backward compatibility)
-  const currentSections = output.sections || [
-    { type: "hero", content: legacyData.hero },
-    { type: "problem", content: legacyData.problem },
-    { type: "solution", content: legacyData.solution },
-    { type: "benefits", content: { title: "Why Choose This?", items: legacyData.benefits } },
-    { type: "productHighlights", content: { title: "Key Features", items: legacyData.productHighlights } },
-    { type: "audience", content: { 
-        perfectForTitle: "Perfect For", 
-        perfectForItems: legacyData.whoItIsFor,
-        notForTitle: "Not For You If",
-        notForItems: legacyData.whoItIsNotFor
-    } },
-    { type: "useCases", content: { title: "Real World Applications", items: legacyData.useCases } },
-    { type: "faq", content: { title: "Common Questions", items: legacyData.faq } },
-    { type: "finalCta", content: legacyData.finalCta },
-  ].filter(s => s.content);
+  const output = normalizeLandingPageOutput(existing.outputJson);
+  const currentSections = output.sections;
 
   // Generic helper to update nested objects in sections
   const updatedSections = currentSections.map((section, index) => {
