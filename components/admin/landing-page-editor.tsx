@@ -1,7 +1,8 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
-import { Loader2, Save, X, Video, Image as ImageIcon, Type, Layout, List, HelpCircle, CheckCircle, AlertCircle, Repeat } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Loader2, Sparkles, Save, Video, Image as ImageIcon, Type, Layout, List, HelpCircle, CheckCircle, AlertCircle, Repeat } from "lucide-react";
 import { toast } from "sonner";
 
 import { updateLandingPageAction, type LandingPageUpdateState } from "@/actions/landing-pages";
@@ -15,44 +16,41 @@ import {
 } from "@/components/ui/card";
 import {
   Field,
+  FieldDescription,
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import type { GeneratedLandingPage } from "@/db/schema";
-import type { LandingPageOutput, LandingPageSection } from "@/lib/landing-pages";
-import { LandingPageMediaUploader } from "./landing-page-media-uploader";
+import {
+  normalizeLandingPageOutput,
+  type LandingPageSection,
+} from "@/lib/landing-pages";
 
 type LandingPageEditorProps = {
   landingPage: GeneratedLandingPage;
 };
 
 export function LandingPageEditor({ landingPage }: LandingPageEditorProps) {
+  const router = useRouter();
   const [state, formAction, isPending] = useActionState(updateLandingPageAction, {
     success: false,
     message: "",
   });
+  const [aiInstructions, setAiInstructions] = useState("");
+  const [isApplyingAi, setIsApplyingAi] = useState(false);
 
-  const output = landingPage.outputJson as LandingPageOutput;
-  const legacyData = output as any;
-
-  const sections = output.sections || [
-    { type: "hero", content: legacyData.hero },
-    { type: "problem", content: legacyData.problem },
-    { type: "solution", content: legacyData.solution },
-    { type: "benefits", content: { title: "Why Choose This?", items: legacyData.benefits } },
-    { type: "productHighlights", content: { title: "Key Features", items: legacyData.productHighlights } },
-    { type: "audience", content: { 
-        perfectForTitle: "Perfect For", 
-        perfectForItems: legacyData.whoItIsFor,
-        notForTitle: "Not For You If",
-        notForItems: legacyData.whoItIsNotFor
-    } },
-    { type: "useCases", content: { title: "Real World Applications", items: legacyData.useCases } },
-    { type: "faq", content: { title: "Common Questions", items: legacyData.faq } },
-    { type: "finalCta", content: legacyData.finalCta },
-  ].filter(s => s.content);
+  const output = normalizeLandingPageOutput(landingPage.outputJson);
+  const sections = output.sections;
 
   useEffect(() => {
     if (state.success) {
@@ -61,6 +59,42 @@ export function LandingPageEditor({ landingPage }: LandingPageEditorProps) {
       toast.error(state.message);
     }
   }, [state]);
+
+  async function applyAiEdit() {
+    const instructions = aiInstructions.trim();
+
+    if (instructions.length < 10) {
+      toast.error("Describe the edit in a little more detail.");
+      return;
+    }
+
+    setIsApplyingAi(true);
+
+    try {
+      const response = await fetch("/api/ai/edit-landing-page", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          landingPageId: landingPage.id,
+          instructions,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "AI edit failed.");
+      }
+
+      toast.success("AI changes applied.");
+      setAiInstructions("");
+      router.refresh();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "AI edit failed.");
+    } finally {
+      setIsApplyingAi(false);
+    }
+  }
 
   return (
     <form action={formAction} className="space-y-8 pb-10">
@@ -86,6 +120,66 @@ export function LandingPageEditor({ landingPage }: LandingPageEditorProps) {
       <div className="grid gap-8 lg:grid-cols-3">
         {/* Left: Metadata & Settings */}
         <div className="space-y-8 lg:col-span-1">
+          <Card className="border-border/60 shadow-sm">
+            <CardHeader className="bg-muted/30 pb-4">
+              <div className="flex items-center gap-2 text-primary">
+                <Sparkles className="size-4" />
+                <span className="text-sm font-medium">AI Editor</span>
+              </div>
+              <CardTitle className="text-lg">Edit With AI</CardTitle>
+              <CardDescription>
+                Ask for copy rewrites, section changes, layout shifts, or hero media repositioning.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <FieldGroup>
+                <Field>
+                  <FieldLabel htmlFor="aiInstructions">Edit Instructions</FieldLabel>
+                  <Textarea
+                    id="aiInstructions"
+                    value={aiInstructions}
+                    onChange={(event) => setAiInstructions(event.target.value)}
+                    placeholder="Examples: Move the hero image to the left, shorten the headline, add a comparison section after benefits, and make the tone more premium."
+                    className="min-h-32 resize-none bg-background"
+                  />
+                  <FieldDescription>
+                    The AI edits the structured landing page JSON and saves the result directly to this draft.
+                  </FieldDescription>
+                </Field>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    "Move the hero image to the left and tighten the headline.",
+                    "Turn this into a more premium, high-trust page for professionals.",
+                    "Add a comparison section after the benefits section.",
+                  ].map((suggestion) => (
+                    <Button
+                      key={suggestion}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setAiInstructions(suggestion)}
+                    >
+                      {suggestion}
+                    </Button>
+                  ))}
+                </div>
+                <Button
+                  type="button"
+                  onClick={applyAiEdit}
+                  disabled={isApplyingAi}
+                  className="shadow-lg shadow-primary/20"
+                >
+                  {isApplyingAi ? (
+                    <Loader2 className="mr-2 size-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="mr-2 size-4" />
+                  )}
+                  Apply AI Edit
+                </Button>
+              </FieldGroup>
+            </CardContent>
+          </Card>
+
           <Card className="border-border/60 shadow-sm">
             <CardHeader className="bg-muted/30 pb-4">
               <CardTitle className="text-lg">Page Settings</CardTitle>
@@ -177,7 +271,7 @@ export function LandingPageEditor({ landingPage }: LandingPageEditorProps) {
           {sections.map((section, index) => (
             <SectionEditorItem 
               key={`${section.type}-${index}`} 
-              section={section as any} 
+              section={section}
               index={index} 
             />
           ))}
@@ -189,20 +283,23 @@ export function LandingPageEditor({ landingPage }: LandingPageEditorProps) {
 
 function SectionEditorItem({ section, index }: { section: LandingPageSection; index: number }) {
   const prefix = `section.${index}.`;
+  const [heroMediaLayout, setHeroMediaLayout] = useState(
+    section.type === "hero" ? section.content.mediaLayout || "right" : "right"
+  );
   
   const getIcon = () => {
     switch (section.type) {
       case "hero": return <Layout className="size-5 text-primary" />;
       case "problem": return <AlertCircle className="size-5 text-destructive" />;
       case "solution": return <CheckCircle className="size-5 text-green-500" />;
-      case "benefits": return <Sparkles className="size-5 text-primary" />;
+      case "benefits": return <SparklesIcon className="size-5 text-primary" />;
       case "useCases": return <Repeat className="size-5 text-primary" />;
       case "productHighlights": return <List className="size-5 text-primary" />;
       case "audience": return <Type className="size-5 text-primary" />;
       case "comparison": return <Layout className="size-5 text-primary" />;
       case "howItWorks": return <List className="size-5 text-primary" />;
       case "faq": return <HelpCircle className="size-5 text-primary" />;
-      case "finalCta": return <Sparkles className="size-5 text-primary" />;
+      case "finalCta": return <SparklesIcon className="size-5 text-primary" />;
       default: return <Type className="size-5 text-primary" />;
     }
   };
@@ -223,7 +320,7 @@ function SectionEditorItem({ section, index }: { section: LandingPageSection; in
       <CardContent className="pt-6">
         <div className="space-y-6">
           {Object.entries(section.content).map(([key, value]) => {
-            if (key === "imageUrl" || key === "videoUrl") return null; // Handled separately if needed
+            if (key === "imageUrl" || key === "videoUrl" || key === "mediaLayout") return null;
             
             if (Array.isArray(value)) {
               // Handle simple string arrays (bullets, items as strings)
@@ -276,11 +373,55 @@ function SectionEditorItem({ section, index }: { section: LandingPageSection; in
           })}
 
           {section.type === "hero" && (
-            <div className="grid gap-6 pt-4 sm:grid-cols-2">
-               {/* Simplified media display for hero */}
-               <div className="text-xs text-muted-foreground italic">
-                 Media assets are preserved but currently managed via the generator or JSON.
-               </div>
+            <div className="space-y-6 border-t border-border/40 pt-6">
+              <div className="grid gap-6 sm:grid-cols-2">
+                <Field>
+                  <FieldLabel>Hero Image URL</FieldLabel>
+                  <Input
+                    name={`${prefix}imageUrl`}
+                    defaultValue={section.content.imageUrl || ""}
+                    className="bg-background text-xs"
+                  />
+                </Field>
+
+                <Field>
+                  <FieldLabel>Hero Video URL</FieldLabel>
+                  <Input
+                    name={`${prefix}videoUrl`}
+                    defaultValue={section.content.videoUrl || ""}
+                    className="bg-background text-xs"
+                  />
+                </Field>
+              </div>
+
+              <Field>
+                <FieldLabel>Hero Media Layout</FieldLabel>
+                <input
+                  type="hidden"
+                  name={`${prefix}mediaLayout`}
+                  value={heroMediaLayout}
+                />
+                <Select
+                  value={heroMediaLayout}
+                  onValueChange={(value) =>
+                    setHeroMediaLayout(value as "left" | "right" | "stacked")
+                  }
+                >
+                  <SelectTrigger className="bg-background">
+                    <SelectValue placeholder="Choose a layout" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value="left">Media left</SelectItem>
+                      <SelectItem value="right">Media right</SelectItem>
+                      <SelectItem value="stacked">Stacked / centered</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+                <FieldDescription>
+                  This controls whether the hero media sits on the left, right, or below the centered copy.
+                </FieldDescription>
+              </Field>
             </div>
           )}
         </div>
@@ -289,7 +430,7 @@ function SectionEditorItem({ section, index }: { section: LandingPageSection; in
   );
 }
 
-function Sparkles({ className }: { className?: string }) {
+function SparklesIcon({ className }: { className?: string }) {
   return (
     <svg 
       xmlns="http://www.w3.org/2000/svg" 

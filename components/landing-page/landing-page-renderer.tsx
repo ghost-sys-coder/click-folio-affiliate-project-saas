@@ -2,7 +2,11 @@ import { ArrowRight, CheckCircle2, ShieldAlert, Check, X as CloseX, Info } from 
 
 import { Button } from "@/components/ui/button";
 import { buildTrackedGoHref, type TrackingSearchParams } from "@/lib/click-tracking";
-import type { LandingPageOutput, LandingPageSection } from "@/lib/landing-pages";
+import {
+  normalizeLandingPageOutput,
+  type LandingPageOutput,
+  type LandingPageSection,
+} from "@/lib/landing-pages";
 
 type LandingPageRendererProps = {
   data: LandingPageOutput;
@@ -19,24 +23,8 @@ export function LandingPageRenderer({
   isPreview = false,
   trackingParams,
 }: LandingPageRendererProps) {
-  // Backward compatibility migration for old static schema
-  const legacyData = data as any;
-  const sections = data.sections || [
-    { type: "hero", content: legacyData.hero },
-    { type: "problem", content: legacyData.problem },
-    { type: "solution", content: legacyData.solution },
-    { type: "benefits", content: { title: "Why Choose This?", items: legacyData.benefits } },
-    { type: "productHighlights", content: { title: "Key Features", items: legacyData.productHighlights } },
-    { type: "audience", content: { 
-        perfectForTitle: "Perfect For", 
-        perfectForItems: legacyData.whoItIsFor,
-        notForTitle: "Not For You If",
-        notForItems: legacyData.whoItIsNotFor
-    } },
-    { type: "useCases", content: { title: "Real World Applications", items: legacyData.useCases } },
-    { type: "faq", content: { title: "Common Questions", items: legacyData.faq } },
-    { type: "finalCta", content: legacyData.finalCta },
-  ].filter(s => s.content);
+  const normalizedData = normalizeLandingPageOutput(data);
+  const sections = normalizedData.sections;
 
   return (
     <div data-theme={theme} className="min-h-screen bg-background text-foreground selection:bg-primary/20">
@@ -58,11 +46,11 @@ export function LandingPageRenderer({
       {/* Risk Warnings & Disclosure - Root level */}
       <footer className="py-16 bg-muted/50 border-t border-border">
         <div className="container px-4 mx-auto max-w-4xl text-center">
-          {data.riskWarnings && data.riskWarnings.length > 0 && (
+          {normalizedData.riskWarnings && normalizedData.riskWarnings.length > 0 && (
             <div className="mb-12 space-y-4">
               <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Important Considerations</h4>
               <div className="flex flex-wrap justify-center gap-3">
-                {data.riskWarnings.map((warning, i) => (
+                {normalizedData.riskWarnings.map((warning, i) => (
                   <span key={i} className="text-[10px] px-3 py-1 rounded-full border border-border bg-background text-muted-foreground">
                     {warning}
                   </span>
@@ -71,7 +59,7 @@ export function LandingPageRenderer({
             </div>
           )}
           <p className="text-xs text-muted-foreground leading-relaxed max-w-2xl mx-auto italic">
-            {data.disclosure}
+            {normalizedData.disclosure}
           </p>
         </div>
       </footer>
@@ -128,11 +116,16 @@ function HeroSection({
   trackingParams?: TrackingSearchParams;
 }) {
   const ctaHref = buildTrackedGoHref(affiliateLinkId, trackingParams);
+  const hasMedia = Boolean(content.imageUrl || content.videoUrl);
+  const mediaLayout = content.mediaLayout || "right";
+  const mediaFirst = mediaLayout === "left";
+  const stackedLayout = mediaLayout === "stacked" || !hasMedia;
+
   return (
     <section className="relative pt-20 pb-16 md:pt-32 md:pb-24 overflow-hidden border-b border-border/40 bg-linear-to-b from-muted/50 to-background">
       <div className="container px-4 mx-auto relative z-10">
-        <div className={`flex flex-col ${content.imageUrl || content.videoUrl ? "lg:flex-row lg:items-center lg:text-left" : "text-center"} gap-12`}>
-          <div className={`${content.imageUrl || content.videoUrl ? "lg:w-1/2" : "max-w-4xl mx-auto"}`}>
+        <div className={`flex flex-col gap-12 ${stackedLayout ? "text-center" : `lg:flex-row lg:items-center lg:text-left ${mediaFirst ? "lg:flex-row-reverse" : ""}`}`}>
+          <div className={`${hasMedia && !stackedLayout ? "lg:w-1/2" : "max-w-4xl mx-auto"}`}>
             {content.eyebrow && (
               <span className="inline-block px-3 py-1 mb-6 text-xs font-bold tracking-widest uppercase rounded-full bg-primary/10 text-primary">
                 {content.eyebrow}
@@ -141,7 +134,7 @@ function HeroSection({
             <h1 className="mb-6 text-4xl md:text-6xl font-extrabold tracking-tight leading-tight">
               {content.headline}
             </h1>
-            <p className="mb-10 text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto lg:mx-0">
+            <p className={`mb-10 text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl ${stackedLayout ? "mx-auto" : "mx-auto lg:mx-0"}`}>
               {content.subheadline}
             </p>
             <Button asChild size="lg" className="h-14 px-8 text-md font-bold shadow-xl shadow-primary/20">
@@ -152,8 +145,8 @@ function HeroSection({
             </Button>
           </div>
 
-          {(content.imageUrl || content.videoUrl) && (
-            <div className="lg:w-1/2 flex justify-center">
+          {hasMedia && (
+            <div className={`flex justify-center ${stackedLayout ? "max-w-5xl mx-auto w-full" : "lg:w-1/2"}`}>
               <div className="relative w-full aspect-video rounded-3xl overflow-hidden shadow-2xl border border-border bg-muted/30 group">
                 {content.videoUrl ? (
                   <video
