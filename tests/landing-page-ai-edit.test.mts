@@ -8,6 +8,7 @@ import {
   buildLandingPageEditPrompt,
 } from "../lib/ai-landing-pages.ts";
 import {
+  getFaqVariant,
   getHeroMediaLayoutMode,
   landingPageGenerationSchema,
   landingPageOutputSchema,
@@ -100,6 +101,52 @@ test("landing page schema supports background hero media layout", () => {
   assert.equal(hero.content.mediaLayout, "background");
 });
 
+test("landing page schema supports faq accordion variants", () => {
+  const parsed = landingPageOutputSchema.parse({
+    sections: [
+      {
+        type: "hero",
+        content: {
+          headline: "Choose better tools",
+          subheadline: "Answers before you click",
+          ctaLabel: "View offer",
+        },
+      },
+      {
+        type: "faq",
+        content: {
+          title: "Common questions",
+          variant: "accordion",
+          items: [
+            {
+              question: "Is setup difficult?",
+              answer: "No, it stays beginner friendly.",
+            },
+          ],
+        },
+      },
+      {
+        type: "finalCta",
+        content: {
+          headline: "Ready to explore?",
+          body: "See the offer details.",
+          ctaLabel: "Get started",
+        },
+      },
+    ],
+    disclosure: "Affiliate disclosure text",
+    riskWarnings: ["Check the vendor page for final details."],
+    seo: {
+      title: "Accordion FAQ page",
+      description: "A page with an accordion FAQ design.",
+    },
+  });
+
+  const faq = parsed.sections[1];
+  assert.equal(faq.type, "faq");
+  assert.equal(faq.content.variant, "accordion");
+});
+
 test("normalizes legacy landing page output into section-based output", () => {
   const normalized = normalizeLandingPageOutput({
     hero: {
@@ -134,6 +181,11 @@ test("normalizes legacy landing page output into section-based output", () => {
       : undefined,
     "right"
   );
+});
+
+test("faq variant defaults to cards when not provided", () => {
+  assert.equal(getFaqVariant(undefined), "cards");
+  assert.equal(getFaqVariant("accordion"), "accordion");
 });
 
 test("background hero layout uses overlay mode instead of side-by-side media", () => {

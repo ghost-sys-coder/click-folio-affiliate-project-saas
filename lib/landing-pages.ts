@@ -2,6 +2,7 @@ import { z } from "zod";
 import { appThemeValues } from "./themes.ts";
 
 export const heroMediaLayouts = ["left", "right", "stacked", "background"] as const;
+export const faqVariants = ["cards", "accordion"] as const;
 
 export function getHeroMediaLayoutMode(
   mediaLayout: (typeof heroMediaLayouts)[number] | undefined,
@@ -18,6 +19,12 @@ export function getHeroMediaLayoutMode(
     mediaFirst,
     showMediaPanel: hasMedia && !backgroundLayout,
   };
+}
+
+export function getFaqVariant(
+  variant: (typeof faqVariants)[number] | undefined
+) {
+  return variant ?? "cards";
 }
 
 export const landingPageGoals = [
@@ -158,6 +165,7 @@ export const faqSectionSchema = z.object({
   type: z.literal("faq"),
   content: z.object({
     title: z.string().trim().min(1),
+    variant: z.enum(faqVariants).default("cards"),
     items: z.array(z.object({
       question: z.string().trim().min(1),
       answer: z.string().trim().min(1),
@@ -317,6 +325,7 @@ export function normalizeLandingPageOutput(value: unknown): LandingPageOutput {
           type: "faq" as const,
           content: {
             title: "Common Questions",
+            variant: "cards" as const,
             items: legacyData.faq,
           },
         }
@@ -391,6 +400,7 @@ EDITING RULES:
 - Preserve affiliate disclosure and risk warnings unless the user explicitly asks to refine them.
 - You may rewrite copy, reorder sections, add supported sections, remove weak sections, and adjust section-level presentation.
 - For hero media placement, use \`mediaLayout\` with one of: \`left\`, \`right\`, \`stacked\`, or \`background\`.
+- For FAQ presentation, use \`variant\` with one of: \`cards\` or \`accordion\`.
 - Use \`background\` when the hero image or video should sit behind the copy and fully cover the hero section.
 - If the user asks for a layout change, prefer changing structured fields instead of rewriting unrelated content.
 - Maintain a clear conversion path and a compliant tone.`;
@@ -466,6 +476,7 @@ export function getLandingPageJsonSchema() {
                   required: ["title", "items"],
                   properties: {
                     title: { type: "string" },
+                    variant: { type: "string", enum: [...faqVariants] },
                     items: {
                       type: "array",
                       items: {

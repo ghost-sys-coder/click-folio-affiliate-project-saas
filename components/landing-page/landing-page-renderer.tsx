@@ -3,6 +3,7 @@ import { ArrowRight, CheckCircle2, ShieldAlert, Check, X as CloseX, Info } from 
 import { Button } from "@/components/ui/button";
 import { buildTrackedGoHref, type TrackingSearchParams } from "@/lib/click-tracking";
 import {
+  getFaqVariant,
   getHeroMediaLayoutMode,
   normalizeLandingPageOutput,
   type LandingPageOutput,
@@ -406,6 +407,39 @@ function HowItWorksSection({ content }: { content: any }) {
 }
 
 function FaqSection({ content }: { content: any }) {
+  const variant = getFaqVariant(content.variant);
+
+  if (variant === "accordion") {
+    return (
+      <section className="py-20">
+        <div className="container px-4 mx-auto max-w-3xl">
+          <h2 className="text-3xl font-bold mb-12 text-center">{content.title}</h2>
+          <div className="space-y-4">
+            {content.items.map((item: any, i: number) => (
+              <details
+                key={i}
+                className="group overflow-hidden rounded-2xl border border-border bg-card/50"
+              >
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-6 text-left font-bold text-lg marker:hidden">
+                  <span className="flex gap-3">
+                    <Info className="size-5 text-primary shrink-0 mt-0.5" />
+                    <span>{item.question}</span>
+                  </span>
+                  <span className="text-primary transition-transform group-open:rotate-45">
+                    +
+                  </span>
+                </summary>
+                <div className="px-6 pb-6 pl-14">
+                  <p className="text-muted-foreground leading-relaxed">{item.answer}</p>
+                </div>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="py-20">
       <div className="container px-4 mx-auto max-w-3xl">
