@@ -53,6 +53,7 @@ import {
   safeGetAffiliateLinksForWorkspace,
 } from "@/db/affiliate-links";
 import type { AffiliateLink } from "@/db/schema";
+import type { DatabaseReadErrorKind } from "@/lib/database-errors";
 
 export const dynamic = "force-dynamic";
 
@@ -208,9 +209,10 @@ function FeedbackBanner({
 function LinksReadErrorState({
   kind,
 }: {
-  kind: "missing-table" | "unknown";
+  kind: DatabaseReadErrorKind;
 }) {
   const isMissingTable = kind === "missing-table";
+  const isMissingDatabaseUrl = kind === "missing-database-url";
 
   return (
     <div className="mx-auto grid w-full max-w-5xl gap-5">
@@ -222,6 +224,8 @@ function LinksReadErrorState({
           <p className="text-sm text-muted-foreground">
             {isMissingTable
               ? "The links database table is not ready yet."
+              : isMissingDatabaseUrl
+                ? "The app is missing its database connection string."
               : "The workspace could not read link data right now."}
           </p>
         </div>
@@ -240,11 +244,17 @@ function LinksReadErrorState({
             )}
           </EmptyMedia>
           <EmptyTitle>
-            {isMissingTable ? "Database setup required" : "Links unavailable"}
+            {isMissingTable
+              ? "Database setup required"
+              : isMissingDatabaseUrl
+                ? "Database connection missing"
+                : "Links unavailable"}
           </EmptyTitle>
           <EmptyDescription>
             {isMissingTable
               ? "Run the affiliate links migration before creating your first link."
+              : isMissingDatabaseUrl
+                ? "Set DATABASE_URL in your environment before reading affiliate link data."
               : "The request was protected, but the database read failed. Try again after checking the database connection."}
           </EmptyDescription>
         </EmptyHeader>
@@ -252,6 +262,8 @@ function LinksReadErrorState({
           <div className="w-full rounded-lg border bg-muted/30 px-3 py-2 text-left font-mono text-xs text-muted-foreground">
             {isMissingTable
               ? "npx drizzle-kit generate && npx drizzle-kit migrate"
+              : isMissingDatabaseUrl
+                ? "DATABASE_URL=postgres://..."
               : "Check DATABASE_URL and the affiliate_links table permissions."}
           </div>
         </EmptyContent>
