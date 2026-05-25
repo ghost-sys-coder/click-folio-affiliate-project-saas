@@ -1,12 +1,25 @@
-import React from 'react';
-import AuthImageRotator from '@/components/shared/AuthImageRotator';
-import { appThemes } from '@/lib/themes';
+import React from "react";
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
+
+import AuthImageRotator from "@/components/shared/AuthImageRotator";
+import { getOnboardingStateByClerkUserId } from "@/db/profiles";
+import { appThemes } from "@/lib/themes";
 
 interface AuthLayoutProps {
     children: React.ReactNode
 }
 
-const AuthLayout = ({ children }: AuthLayoutProps) => {
+export const dynamic = "force-dynamic";
+
+const AuthLayout = async ({ children }: AuthLayoutProps) => {
+    const { userId } = await auth();
+
+    if (userId) {
+        const onboardingState = await getOnboardingStateByClerkUserId(userId);
+
+        redirect(onboardingState.profileId ? "/admin" : "/onboarding");
+    }
 
     return (
         <div data-theme={appThemes.signalPurple} className="grid min-h-screen grid-cols-1 bg-background text-foreground md:grid-cols-2">

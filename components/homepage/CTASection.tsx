@@ -19,7 +19,7 @@ const CTASection = () => {
                         href="/sign-up"
                         className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary-hover"
                     >
-                        Start free
+                        Start your 7 day free trial
                         <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                 </div>
