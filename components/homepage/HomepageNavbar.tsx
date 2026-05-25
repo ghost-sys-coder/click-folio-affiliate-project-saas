@@ -40,7 +40,7 @@ const HomepageNavbar = () => {
                         </SignInButton>
                     </Button>
                 )}
-                {!isLoaded || !isSignedIn ? (
+                {!isLoaded ? (
                     <Skeleton className='h-10 w-50 rounded-xl' />
                 ) : (
                     <Link
