@@ -5,14 +5,15 @@ import type { LucideIcon } from "lucide-react";
 import { Coins, Moon, Sprout, SunMedium, Waves } from "lucide-react";
 
 import {
-  appThemeValues,
   appThemes,
   getThemeMode,
   type AppTheme,
 } from "@/lib/themes";
-
-const ADMIN_THEME_STORAGE_KEY = "clickfolio-admin-theme";
-const ADMIN_THEME_EVENT = "clickfolio-admin-theme-change";
+import {
+  ADMIN_THEME_EVENT,
+  ADMIN_THEME_STORAGE_KEY,
+  resolveAdminTheme,
+} from "@/lib/admin-theme-bootstrap";
 
 export type AdminThemeOption = {
   value: AppTheme;
@@ -55,7 +56,7 @@ export const adminThemeOptions: AdminThemeOption[] = [
 ];
 
 function isAdminTheme(value: string | null): value is AppTheme {
-  return Boolean(value && appThemeValues.includes(value as AppTheme));
+  return resolveAdminTheme(value) === value;
 }
 
 function getStoredAdminTheme() {
@@ -141,7 +142,7 @@ export function AdminThemeShell({ children }: { children: React.ReactNode }) {
   }, [theme]);
 
   return (
-    <div data-theme={theme} className="min-h-svh bg-background text-foreground">
+    <div className="min-h-svh bg-background text-foreground">
       {children}
     </div>
   );
