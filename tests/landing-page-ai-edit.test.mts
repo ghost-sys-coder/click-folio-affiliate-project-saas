@@ -8,6 +8,8 @@ import {
   buildLandingPageEditPrompt,
 } from "../lib/ai-landing-pages.ts";
 import {
+  createDefaultLandingPageSection,
+  hydrateLandingPageSectionsFromForm,
   getFaqVariant,
   getHeroMediaLayoutMode,
   landingPageGenerationSchema,
@@ -186,6 +188,82 @@ test("normalizes legacy landing page output into section-based output", () => {
 test("faq variant defaults to cards when not provided", () => {
   assert.equal(getFaqVariant(undefined), "cards");
   assert.equal(getFaqVariant("accordion"), "accordion");
+});
+
+test("creates valid default sections for manual insertion", () => {
+  const faqSection = createDefaultLandingPageSection("faq");
+  const problemSection = createDefaultLandingPageSection("problem");
+
+  assert.equal(faqSection.type, "faq");
+  assert.equal(faqSection.content.variant, "cards");
+  assert.equal(problemSection.type, "problem");
+  assert.equal(problemSection.content.bullets.length > 0, true);
+});
+
+test("hydrates existing and newly inserted sections from form data", () => {
+  const existing = normalizeLandingPageOutput({
+    sections: [
+      {
+        type: "hero",
+        content: {
+          headline: "Current headline",
+          subheadline: "Current subheadline",
+          ctaLabel: "View offer",
+        },
+      },
+      {
+        type: "finalCta",
+        content: {
+          headline: "Current CTA",
+          body: "Current CTA body",
+          ctaLabel: "Get started",
+        },
+      },
+      {
+        type: "problem",
+        content: {
+          title: "Current problem",
+          body: "Current problem body",
+          bullets: ["Current bullet"],
+        },
+      },
+    ],
+    disclosure: "Disclosure",
+    riskWarnings: [],
+    seo: {
+      title: "SEO title",
+      description: "SEO description",
+    },
+  }).sections;
+
+  const formData = new FormData();
+  formData.set("sectionCount", "4");
+  formData.set("section.0.type", "hero");
+  formData.set("section.0.headline", "Updated headline");
+  formData.set("section.1.type", "finalCta");
+  formData.set("section.1.headline", "Updated CTA");
+  formData.set("section.3.type", "faq");
+  formData.set("section.3.title", "New FAQ");
+  formData.set("section.3.variant", "accordion");
+  formData.set("section.3.items.0.question", "Do I need experience?");
+  formData.set("section.3.items.0.answer", "No, beginners can start here.");
+
+  const sections = hydrateLandingPageSectionsFromForm({
+    existingSections: existing,
+    formData,
+  });
+
+  assert.equal(sections.length, 4);
+  assert.equal(sections[0]?.type, "hero");
+  assert.equal(sections[0]?.type === "hero" ? sections[0].content.headline : "", "Updated headline");
+  assert.equal(sections[1]?.type, "finalCta");
+  assert.equal(sections[1]?.type === "finalCta" ? sections[1].content.headline : "", "Updated CTA");
+  assert.equal(sections[3]?.type, "faq");
+  assert.equal(sections[3]?.type === "faq" ? sections[3].content.variant : "cards", "accordion");
+  assert.equal(
+    sections[3]?.type === "faq" ? sections[3].content.items[0]?.question : "",
+    "Do I need experience?"
+  );
 });
 
 test("background hero layout uses overlay mode instead of side-by-side media", () => {

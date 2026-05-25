@@ -2,10 +2,10 @@
 
 import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Sparkles, Save, Video, Image as ImageIcon, Type, Layout, List, HelpCircle, CheckCircle, AlertCircle, Repeat } from "lucide-react";
+import { Loader2, Sparkles, Save, Type, Layout, List, HelpCircle, CheckCircle, AlertCircle, Repeat, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { updateLandingPageAction, type LandingPageUpdateState } from "@/actions/landing-pages";
+import { updateLandingPageAction } from "@/actions/landing-pages";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -32,7 +32,9 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import type { GeneratedLandingPage } from "@/db/schema";
 import {
+  createDefaultLandingPageSection,
   faqVariants,
+  landingPageSectionTypes,
   normalizeLandingPageOutput,
   type LandingPageSection,
 } from "@/lib/landing-pages";
@@ -49,9 +51,17 @@ export function LandingPageEditor({ landingPage }: LandingPageEditorProps) {
   });
   const [aiInstructions, setAiInstructions] = useState("");
   const [isApplyingAi, setIsApplyingAi] = useState(false);
+  const [newSections, setNewSections] = useState<Array<{ id: string; section: LandingPageSection }>>([]);
+  const [sectionTypeToAdd, setSectionTypeToAdd] = useState<
+    Exclude<(typeof landingPageSectionTypes)[number], "hero">
+  >("faq");
 
   const output = normalizeLandingPageOutput(landingPage.outputJson);
   const sections = output.sections;
+  const combinedSections = [
+    ...sections.map((section, index) => ({ id: `existing-${index}`, section, isNew: false })),
+    ...newSections.map((entry) => ({ ...entry, isNew: true })),
+  ];
 
   useEffect(() => {
     if (state.success) {
@@ -97,9 +107,24 @@ export function LandingPageEditor({ landingPage }: LandingPageEditorProps) {
     }
   }
 
+  function addSection() {
+    setNewSections((current) => [
+      ...current,
+      {
+        id: `new-${current.length}-${Date.now()}`,
+        section: createDefaultLandingPageSection(sectionTypeToAdd),
+      },
+    ]);
+  }
+
+  function removeNewSection(id: string) {
+    setNewSections((current) => current.filter((entry) => entry.id !== id));
+  }
+
   return (
     <form action={formAction} className="space-y-8 pb-10">
       <input type="hidden" name="id" value={landingPage.id} />
+      <input type="hidden" name="sectionCount" value={combinedSections.length} />
 
       <div className="flex items-center justify-between">
         <div>
@@ -270,11 +295,51 @@ export function LandingPageEditor({ landingPage }: LandingPageEditorProps) {
 
         {/* Middle/Right: Dynamic Content Editor */}
         <div className="space-y-8 lg:col-span-2">
-          {sections.map((section, index) => (
+          <Card className="border-dashed border-border/80 shadow-sm">
+            <CardHeader className="bg-muted/20 pb-4">
+              <CardTitle className="text-lg">Add Section</CardTitle>
+              <CardDescription>
+                Insert a structured section that still works with AI editing and the page renderer.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <div className="flex flex-col gap-4 sm:flex-row">
+                <Select
+                  value={sectionTypeToAdd}
+                  onValueChange={(value) =>
+                    setSectionTypeToAdd(value as Exclude<(typeof landingPageSectionTypes)[number], "hero">)
+                  }
+                >
+                  <SelectTrigger className="bg-background sm:flex-1">
+                    <SelectValue placeholder="Choose a section type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {landingPageSectionTypes
+                        .filter((type) => type !== "hero")
+                        .map((type) => (
+                          <SelectItem key={type} value={type}>
+                            {type.charAt(0).toUpperCase() + type.slice(1).replace(/([A-Z])/g, " $1")}
+                          </SelectItem>
+                        ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+                <Button type="button" onClick={addSection}>
+                  <Plus className="mr-2 size-4" />
+                  Add Section
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {combinedSections.map(({ id, section, isNew }, index) => (
             <SectionEditorItem 
-              key={`${section.type}-${index}`} 
+              key={id} 
               section={section}
-              index={index} 
+              index={index}
+              isNew={isNew}
+              onRemove={isNew ? () => removeNewSection(id) : undefined}
             />
           ))}
         </div>
@@ -283,7 +348,17 @@ export function LandingPageEditor({ landingPage }: LandingPageEditorProps) {
   );
 }
 
-function SectionEditorItem({ section, index }: { section: LandingPageSection; index: number }) {
+function SectionEditorItem({
+  section,
+  index,
+  isNew = false,
+  onRemove,
+}: {
+  section: LandingPageSection;
+  index: number;
+  isNew?: boolean;
+  onRemove?: () => void;
+}) {
   const prefix = `section.${index}.`;
   const [heroMediaLayout, setHeroMediaLayout] = useState(
     section.type === "hero" ? section.content.mediaLayout || "right" : "right"
@@ -316,10 +391,19 @@ function SectionEditorItem({ section, index }: { section: LandingPageSection; in
 
   return (
     <Card className="border-border/60 shadow-sm">
+      <input type="hidden" name={`${prefix}type`} value={section.type} />
       <CardHeader className="bg-muted/30 pb-4 border-b border-border/40">
-        <div className="flex items-center gap-2">
-          {getIcon()}
-          <CardTitle className="text-lg">{getTitle()}</CardTitle>
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            {getIcon()}
+            <CardTitle className="text-lg">{getTitle()}</CardTitle>
+          </div>
+          {isNew && onRemove ? (
+            <Button type="button" variant="outline" size="sm" onClick={onRemove}>
+              <Trash2 className="mr-2 size-4" />
+              Remove
+            </Button>
+          ) : null}
         </div>
       </CardHeader>
       <CardContent className="pt-6">
@@ -377,14 +461,7 @@ function SectionEditorItem({ section, index }: { section: LandingPageSection; in
                 );
               }
               // Complex arrays (items with title/description)
-              return (
-                <div key={key} className="space-y-2">
-                   <FieldLabel className="capitalize">{key.replace(/([A-Z])/g, ' $1')} (Read-only for now)</FieldLabel>
-                   <div className="p-4 rounded-lg bg-muted/50 text-xs text-muted-foreground italic border border-dashed border-border">
-                     Complex list items are currently non-editable in this view.
-                   </div>
-                </div>
-              );
+              return <ObjectArrayEditor key={key} section={section} fieldKey={key} prefix={prefix} />;
             }
 
             if (typeof value === "string") {
@@ -471,6 +548,165 @@ function SectionEditorItem({ section, index }: { section: LandingPageSection; in
       </CardContent>
     </Card>
   );
+}
+
+function ObjectArrayEditor({
+  section,
+  fieldKey,
+  prefix,
+}: {
+  section: LandingPageSection;
+  fieldKey: string;
+  prefix: string;
+}) {
+  const value = section.content[fieldKey as keyof typeof section.content];
+  const items = Array.isArray(value) ? value : [];
+  const config = getObjectArrayConfig(section.type, fieldKey);
+  const [entries, setEntries] = useState<Array<Record<string, unknown>>>(
+    items.map((item) => ({ ...(item as Record<string, unknown>) }))
+  );
+
+  if (!config) {
+    return (
+      <div className="space-y-2">
+        <FieldLabel className="capitalize">{fieldKey.replace(/([A-Z])/g, " $1")} (Read-only for now)</FieldLabel>
+        <div className="p-4 rounded-lg bg-muted/50 text-xs text-muted-foreground italic border border-dashed border-border">
+          This section structure is not editable in this view yet.
+        </div>
+      </div>
+    );
+  }
+
+  const resolvedConfig = config;
+
+  function addEntry() {
+    setEntries((current) => [...current, { ...resolvedConfig.defaultItem }]);
+  }
+
+  function removeEntry(index: number) {
+    setEntries((current) => current.filter((_item, itemIndex) => itemIndex !== index));
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-4">
+        <FieldLabel className="capitalize">{fieldKey.replace(/([A-Z])/g, " $1")}</FieldLabel>
+        <Button type="button" variant="outline" size="sm" onClick={addEntry}>
+          <Plus className="mr-2 size-4" />
+          Add Item
+        </Button>
+      </div>
+      <div className="space-y-4">
+        {entries.map((entry, index) => (
+          <div key={`${fieldKey}-${index}`} className="rounded-xl border border-border/60 bg-muted/10 p-4 space-y-4">
+            <div className="flex items-center justify-between gap-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Item {index + 1}
+              </p>
+              {entries.length > 1 ? (
+                <Button type="button" variant="ghost" size="sm" onClick={() => removeEntry(index)}>
+                  <Trash2 className="mr-2 size-4" />
+                  Remove
+                </Button>
+              ) : null}
+            </div>
+            {resolvedConfig.fields.map((field) => {
+              const fieldValue = String(entry[field.name] ?? "");
+              const inputName = `${prefix}${fieldKey}.${index}.${field.name}`;
+
+              if (field.type === "textarea") {
+                return (
+                  <Field key={field.name}>
+                    <FieldLabel>{field.label}</FieldLabel>
+                    <Textarea
+                      name={inputName}
+                      defaultValue={fieldValue}
+                      className="bg-background min-h-20 resize-none"
+                    />
+                  </Field>
+                );
+              }
+
+              return (
+                <Field key={field.name}>
+                  <FieldLabel>{field.label}</FieldLabel>
+                  <Input
+                    name={inputName}
+                    defaultValue={fieldValue}
+                    className="bg-background"
+                  />
+                </Field>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function getObjectArrayConfig(sectionType: LandingPageSection["type"], fieldKey: string) {
+  if (fieldKey === "items") {
+    if (sectionType === "faq") {
+      return {
+        fields: [
+          { name: "question", label: "Question", type: "input" as const },
+          { name: "answer", label: "Answer", type: "textarea" as const },
+        ],
+        defaultItem: {
+          question: "Question",
+          answer: "Answer",
+        },
+      };
+    }
+
+    if (
+      sectionType === "benefits" ||
+      sectionType === "useCases" ||
+      sectionType === "productHighlights"
+    ) {
+      return {
+        fields: [
+          { name: "title", label: "Title", type: "input" as const },
+          { name: "description", label: "Description", type: "textarea" as const },
+        ],
+        defaultItem: {
+          title: "Title",
+          description: "Description",
+        },
+      };
+    }
+  }
+
+  if (fieldKey === "steps" && sectionType === "howItWorks") {
+    return {
+      fields: [
+        { name: "title", label: "Step title", type: "input" as const },
+        { name: "description", label: "Step description", type: "textarea" as const },
+      ],
+      defaultItem: {
+        title: "Step title",
+        description: "Describe this step.",
+      },
+    };
+  }
+
+  if (fieldKey === "rows" && sectionType === "comparison") {
+    return {
+      fields: [
+        { name: "feature", label: "Feature", type: "input" as const },
+        { name: "leftValue", label: "Left value", type: "input" as const },
+        { name: "rightValue", label: "Right value", type: "input" as const },
+      ],
+      defaultItem: {
+        feature: "Feature",
+        leftValue: "Current option",
+        rightValue: "Recommended option",
+      },
+    };
+  }
+
+  return null;
 }
 
 function SparklesIcon({ className }: { className?: string }) {

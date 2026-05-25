@@ -3,6 +3,19 @@ import { appThemeValues } from "./themes.ts";
 
 export const heroMediaLayouts = ["left", "right", "stacked", "background"] as const;
 export const faqVariants = ["cards", "accordion"] as const;
+export const landingPageSectionTypes = [
+  "hero",
+  "problem",
+  "solution",
+  "benefits",
+  "useCases",
+  "productHighlights",
+  "audience",
+  "comparison",
+  "howItWorks",
+  "faq",
+  "finalCta",
+] as const;
 
 export function getHeroMediaLayoutMode(
   mediaLayout: (typeof heroMediaLayouts)[number] | undefined,
@@ -25,6 +38,253 @@ export function getFaqVariant(
   variant: (typeof faqVariants)[number] | undefined
 ) {
   return variant ?? "cards";
+}
+
+type LandingPageSectionType = (typeof landingPageSectionTypes)[number];
+
+export function createDefaultLandingPageSection(
+  type: LandingPageSectionType
+): LandingPageSection {
+  switch (type) {
+    case "hero":
+      return {
+        type,
+        content: {
+          headline: "New headline",
+          subheadline: "Add a compelling subheadline for this offer.",
+          ctaLabel: "View offer",
+          mediaLayout: "right",
+        },
+      };
+    case "problem":
+      return {
+        type,
+        content: {
+          title: "The problem",
+          body: "Describe the main challenge this product solves.",
+          bullets: ["Pain point one"],
+        },
+      };
+    case "solution":
+      return {
+        type,
+        content: {
+          title: "The solution",
+          body: "Explain how this offer addresses the problem.",
+        },
+      };
+    case "benefits":
+      return {
+        type,
+        content: {
+          title: "Key benefits",
+          items: [{ title: "Benefit title", description: "Benefit description" }],
+        },
+      };
+    case "useCases":
+      return {
+        type,
+        content: {
+          title: "Use cases",
+          items: [{ title: "Use case title", description: "Use case description" }],
+        },
+      };
+    case "productHighlights":
+      return {
+        type,
+        content: {
+          title: "Product highlights",
+          items: [{ title: "Highlight title", description: "Highlight description" }],
+        },
+      };
+    case "audience":
+      return {
+        type,
+        content: {
+          perfectForTitle: "Perfect for",
+          perfectForItems: ["Ideal audience type"],
+          notForTitle: "Not for",
+          notForItems: ["Poor fit example"],
+        },
+      };
+    case "comparison":
+      return {
+        type,
+        content: {
+          title: "Compare your options",
+          leftColumn: "Typical alternative",
+          rightColumn: "This offer",
+          rows: [
+            {
+              feature: "Feature",
+              leftValue: "Basic support",
+              rightValue: "Better support",
+            },
+          ],
+        },
+      };
+    case "howItWorks":
+      return {
+        type,
+        content: {
+          title: "How it works",
+          steps: [{ title: "Step one", description: "Describe the first step." }],
+        },
+      };
+    case "faq":
+      return {
+        type,
+        content: {
+          title: "Frequently asked questions",
+          variant: "cards",
+          items: [{ question: "Question", answer: "Answer" }],
+        },
+      };
+    case "finalCta":
+      return {
+        type,
+        content: {
+          headline: "Ready to take the next step?",
+          body: "Close with a clear, compliant invitation to click through.",
+          ctaLabel: "View offer",
+        },
+      };
+  }
+}
+
+export function hydrateLandingPageSectionsFromForm(params: {
+  existingSections: LandingPageSection[];
+  formData: FormData;
+}) {
+  const requestedSectionCount = Number(params.formData.get("sectionCount"));
+  const sectionCount = Number.isFinite(requestedSectionCount) && requestedSectionCount > 0
+    ? requestedSectionCount
+    : params.existingSections.length;
+
+  return Array.from({ length: sectionCount }, (_value, index) => {
+    const typeValue = params.formData.get(`section.${index}.type`);
+    const type = landingPageSectionTypes.find((candidate) => candidate === typeValue);
+    const baseSection =
+      params.existingSections[index] ??
+      createDefaultLandingPageSection(type ?? "problem");
+    const section = type && baseSection.type !== type
+      ? createDefaultLandingPageSection(type)
+      : baseSection;
+    const newContent = { ...section.content } as Record<string, unknown>;
+
+    Object.keys(newContent).forEach((key) => {
+      const formValue = params.formData.get(`section.${index}.${key}`);
+
+      if (formValue === null) {
+        return;
+      }
+
+      if (key === "bullets" || key === "perfectForItems" || key === "notForItems") {
+        newContent[key] = String(formValue).split("\n").filter(Boolean);
+        return;
+      }
+
+      if (key === "items" || key === "rows" || key === "steps") {
+        return;
+      }
+
+      if (typeof newContent[key] === "boolean") {
+        newContent[key] = formValue === "true";
+        return;
+      }
+
+      newContent[key] = String(formValue);
+    });
+
+    if ("items" in newContent && Array.isArray(newContent.items)) {
+      if (section.type === "faq") {
+        const parsedItems = parseObjectArrayFromForm(params.formData, `section.${index}.items`, [
+          "question",
+          "answer",
+        ]);
+
+        if (parsedItems) {
+          newContent.items = parsedItems as typeof section.content.items;
+        }
+      } else if (
+        section.type === "benefits" ||
+        section.type === "useCases" ||
+        section.type === "productHighlights"
+      ) {
+        const parsedItems = parseObjectArrayFromForm(params.formData, `section.${index}.items`, [
+          "title",
+          "description",
+        ]);
+
+        if (parsedItems) {
+          newContent.items = parsedItems as typeof section.content.items;
+        }
+      }
+    }
+
+    if (section.type === "comparison") {
+      const parsedRows = parseObjectArrayFromForm(params.formData, `section.${index}.rows`, [
+        "feature",
+        "leftValue",
+        "rightValue",
+        "isPositive",
+      ]);
+
+      if (parsedRows) {
+        newContent.rows = parsedRows.map((row) => ({
+          ...row,
+          isPositive:
+            row.isPositive === undefined || row.isPositive === ""
+              ? undefined
+              : row.isPositive === "true",
+        })) as typeof section.content.rows;
+      }
+    }
+
+    if (section.type === "howItWorks") {
+      const parsedSteps = parseObjectArrayFromForm(params.formData, `section.${index}.steps`, [
+        "title",
+        "description",
+      ]);
+
+      if (parsedSteps) {
+        newContent.steps = parsedSteps as typeof section.content.steps;
+      }
+    }
+
+    return {
+      ...section,
+      content: newContent,
+    };
+  }) as LandingPageSection[];
+}
+
+function parseObjectArrayFromForm(
+  formData: FormData,
+  prefix: string,
+  keys: string[]
+) {
+  const items: Array<Record<string, string>> = [];
+
+  for (let index = 0; index < 50; index += 1) {
+    const entry = keys.reduce<Record<string, string>>((acc, key) => {
+      const value = formData.get(`${prefix}.${index}.${key}`);
+
+      if (typeof value === "string" && value.length > 0) {
+        acc[key] = value;
+      }
+
+      return acc;
+    }, {});
+
+    if (keys.every((key) => !(key in entry))) {
+      break;
+    }
+
+    items.push(entry);
+  }
+
+  return items.length > 0 ? items : null;
 }
 
 export const landingPageGoals = [
@@ -473,10 +733,9 @@ export function getLandingPageJsonSchema() {
                 type: { const: "benefits" },
                 content: {
                   type: "object",
-                  required: ["title", "items"],
+                    required: ["title", "items"],
                   properties: {
                     title: { type: "string" },
-                    variant: { type: "string", enum: [...faqVariants] },
                     items: {
                       type: "array",
                       items: {
@@ -569,6 +828,7 @@ export function getLandingPageJsonSchema() {
                   required: ["title", "items"],
                   properties: {
                     title: { type: "string" },
+                    variant: { type: "string", enum: [...faqVariants] },
                     items: {
                       type: "array",
                       items: {
