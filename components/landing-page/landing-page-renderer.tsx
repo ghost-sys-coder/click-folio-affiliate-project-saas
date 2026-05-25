@@ -1,5 +1,4 @@
 import { ArrowRight, CheckCircle2, ShieldAlert, Check, X as CloseX, Info } from "lucide-react";
-import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { buildTrackedGoHref, type TrackingSearchParams } from "@/lib/click-tracking";
@@ -146,10 +145,10 @@ function HeroSection({
               {content.subheadline}
             </p>
             <Button asChild size="lg" className="h-14 px-8 text-md font-bold shadow-xl shadow-primary/20">
-              <Link href={ctaHref}>
+              <a href={ctaHref}>
                 {content.ctaLabel}
                 <ArrowRight className="ml-2 size-5" />
-              </Link>
+              </a>
             </Button>
           </div>
 
@@ -404,10 +403,10 @@ function FinalCtaSection({
         <h2 className="text-3xl md:text-5xl font-extrabold mb-6 max-w-3xl mx-auto">{content.headline}</h2>
         <p className="text-lg md:text-xl opacity-90 mb-10 max-w-2xl mx-auto">{content.body}</p>
         <Button asChild size="lg" variant="secondary" className="h-14 px-10 text-md font-bold shadow-2xl">
-          <Link href={ctaHref}>
+          <a href={ctaHref}>
             {content.ctaLabel}
             <ArrowRight className="ml-2 size-5" />
-          </Link>
+          </a>
         </Button>
       </div>
     </section>

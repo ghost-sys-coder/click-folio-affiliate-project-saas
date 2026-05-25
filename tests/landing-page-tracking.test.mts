@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 
 import {
   buildLandingPageTrackingInput,
@@ -62,4 +63,14 @@ test("builds landing page view tracking input from headers and query params", as
   assert.ok(typeof input.ipAddressHash === "string");
   assert.ok(input.createdAt instanceof Date);
   assert.ok(input.updatedAt instanceof Date);
+});
+
+test("landing page CTAs use plain anchors instead of next/link for tracked redirects", async () => {
+  const rendererSource = await readFile(
+    new URL("../components/landing-page/landing-page-renderer.tsx", import.meta.url),
+    "utf8"
+  );
+
+  assert.equal(rendererSource.includes('import Link from "next/link"'), false);
+  assert.match(rendererSource, /<a href=\{ctaHref\}>/);
 });
