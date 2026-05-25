@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 
 import { getDb } from "@/db/drizzle";
 import { profilesTable, usersTable } from "@/db/schema";
+import { getDatabaseReadError, type DatabaseReadErrorKind } from "@/lib/database-errors";
 import type { AppTheme } from "@/lib/themes";
 
 export async function getUserById(id: string) {
@@ -42,28 +43,53 @@ export async function getProfileByUserId(userId: string) {
   return profile ?? null;
 }
 
-export async function getOnboardingStateByClerkUserId(clerkUserId: string) {
-  const [row] = await getDb()
-    .select({
-      userId: usersTable.id,
-      isDeleted: usersTable.isDeleted,
-      profileId: profilesTable.id,
-      username: profilesTable.username,
-    })
-    .from(usersTable)
-    .leftJoin(profilesTable, eq(profilesTable.userId, usersTable.id))
-    .where(eq(usersTable.clerkUserId, clerkUserId))
-    .limit(1);
+export type OnboardingState = {
+  userId: string | null;
+  profileId: string | null;
+  username: string | null;
+};
 
-  if (!row || row.isDeleted) {
-    return { userId: null, profileId: null, username: null };
+export type OnboardingStateResult =
+  | { ok: true; state: OnboardingState }
+  | { ok: false; error: DatabaseReadErrorKind };
+
+export async function getOnboardingStateByClerkUserId(
+  clerkUserId: string
+): Promise<OnboardingStateResult> {
+  try {
+    const [row] = await getDb()
+      .select({
+        userId: usersTable.id,
+        isDeleted: usersTable.isDeleted,
+        profileId: profilesTable.id,
+        username: profilesTable.username,
+      })
+      .from(usersTable)
+      .leftJoin(profilesTable, eq(profilesTable.userId, usersTable.id))
+      .where(eq(usersTable.clerkUserId, clerkUserId))
+      .limit(1);
+
+    if (!row || row.isDeleted) {
+      return {
+        ok: true,
+        state: { userId: null, profileId: null, username: null },
+      };
+    }
+
+    return {
+      ok: true,
+      state: {
+        userId: row.userId,
+        profileId: row.profileId,
+        username: row.username,
+      },
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      error: getDatabaseReadError(error).kind,
+    };
   }
-
-  return {
-    userId: row.userId,
-    profileId: row.profileId,
-    username: row.username,
-  };
 }
 
 export async function createUserProfile(input: {

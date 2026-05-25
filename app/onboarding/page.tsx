@@ -2,6 +2,7 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { BadgeCheck, LineChart, Link2, ShieldCheck } from "lucide-react";
 
+import { DatabaseSetupRequired } from "@/components/shared/database-setup-required";
 import { OnboardingForm } from "@/components/onboarding/onboarding-form";
 import { OnboardingThemeShell } from "@/components/onboarding/onboarding-theme-shell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,7 +18,20 @@ export default async function OnboardingPage() {
     redirect("/sign-in?redirect_url=/onboarding");
   }
 
-  const onboardingState = await getOnboardingStateByClerkUserId(userId);
+  const onboardingStateResult = await getOnboardingStateByClerkUserId(userId);
+
+  if (!onboardingStateResult.ok) {
+    return (
+      <OnboardingThemeShell>
+        <DatabaseSetupRequired
+          title="Onboarding setup is blocked"
+          description="Clickfolio could not read the users and profiles tables needed to load onboarding. Run your migrations and confirm DATABASE_URL is configured."
+        />
+      </OnboardingThemeShell>
+    );
+  }
+
+  const onboardingState = onboardingStateResult.state;
 
   if (onboardingState.profileId) {
     redirect("/admin");

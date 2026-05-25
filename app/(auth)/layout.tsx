@@ -2,6 +2,7 @@ import React from "react";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
+import { DatabaseSetupRequired } from "@/components/shared/database-setup-required";
 import AuthImageRotator from "@/components/shared/AuthImageRotator";
 import { getOnboardingStateByClerkUserId } from "@/db/profiles";
 import { appThemes } from "@/lib/themes";
@@ -16,9 +17,26 @@ const AuthLayout = async ({ children }: AuthLayoutProps) => {
     const { userId } = await auth();
 
     if (userId) {
-        const onboardingState = await getOnboardingStateByClerkUserId(userId);
+        const onboardingStateResult = await getOnboardingStateByClerkUserId(userId);
 
-        redirect(onboardingState.profileId ? "/admin" : "/onboarding");
+        if (!onboardingStateResult.ok) {
+            return (
+                <div data-theme={appThemes.signalPurple} className="grid min-h-screen grid-cols-1 bg-background text-foreground md:grid-cols-2">
+                    <div className="hidden md:block relative sticky top-0 h-screen">
+                        <AuthImageRotator />
+                    </div>
+                    <div className="flex flex-col gap-4 justify-center items-center px-4 py-8 overflow-hidden relative bg-background">
+                        <AuthImageRotator className='block md:hidden absolute inset-0 -z-10 opacity-50'/>
+                        <DatabaseSetupRequired
+                            title="Authentication is ready, but app setup is incomplete"
+                            description="Clickfolio could not read the users and profiles tables needed to decide where to route your account. Run your migrations and confirm DATABASE_URL is configured."
+                        />
+                    </div>
+                </div>
+            )
+        }
+
+        redirect(onboardingStateResult.state.profileId ? "/admin" : "/onboarding");
     }
 
     return (

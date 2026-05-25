@@ -1,4 +1,4 @@
-export type DatabaseReadErrorKind = "missing-table" | "unknown";
+export type DatabaseReadErrorKind = "missing-table" | "missing-database-url" | "unknown";
 
 export type DatabaseReadError = {
   ok: false;
@@ -8,7 +8,11 @@ export type DatabaseReadError = {
 export function getDatabaseReadError(error: unknown): DatabaseReadError {
   return {
     ok: false,
-    kind: isMissingTableError(error) ? "missing-table" : "unknown",
+    kind: isMissingDatabaseUrlError(error)
+      ? "missing-database-url"
+      : isMissingTableError(error)
+        ? "missing-table"
+        : "unknown",
   };
 }
 
@@ -20,13 +24,23 @@ export function isMissingTableError(error: unknown) {
     (text.includes("failed query") && 
       (text.includes('"affiliate_links"') || 
        text.includes('"subscriptions"') || 
-       text.includes('"usage_events"'))) ||
+       text.includes('"usage_events"') ||
+       text.includes('"users"') ||
+       text.includes('"profiles"'))) ||
     ((text.includes("affiliate_links") || 
       text.includes("subscriptions") || 
-      text.includes("usage_events")) &&
+      text.includes("usage_events") ||
+      text.includes("users") ||
+      text.includes("profiles")) &&
       text.includes("relation") &&
       text.includes("does not exist"))
   );
+}
+
+export function isMissingDatabaseUrlError(error: unknown) {
+  const text = collectErrorText(error).toLowerCase();
+
+  return text.includes("missing database_url");
 }
 
 function collectErrorText(error: unknown, seen = new Set<unknown>()): string {

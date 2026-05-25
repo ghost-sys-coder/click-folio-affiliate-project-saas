@@ -7,6 +7,7 @@ import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { AdminThemeShell } from "@/components/admin/admin-theme";
 import { AdminThemeSwitcher } from "@/components/admin/admin-theme-switcher";
 import { PlanStatusBanner } from "@/components/admin/plan-status-banner";
+import { DatabaseSetupRequired } from "@/components/shared/database-setup-required";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { getOnboardingStateByClerkUserId } from "@/db/profiles";
@@ -20,7 +21,20 @@ const AdminDashboardLayout = async ({ children }: { children: React.ReactNode })
     redirect("/sign-in?redirect_url=/admin");
   }
 
-  const onboardingState = await getOnboardingStateByClerkUserId(userId);
+  const onboardingStateResult = await getOnboardingStateByClerkUserId(userId);
+
+  if (!onboardingStateResult.ok) {
+    return (
+      <AdminThemeShell>
+        <DatabaseSetupRequired
+          title="Admin setup is blocked"
+          description="Clickfolio could not read the users and profiles tables needed to load your admin workspace. Run your migrations and confirm DATABASE_URL is configured."
+        />
+      </AdminThemeShell>
+    );
+  }
+
+  const onboardingState = onboardingStateResult.state;
 
   if (!onboardingState.profileId) {
     redirect("/onboarding");
@@ -29,6 +43,7 @@ const AdminDashboardLayout = async ({ children }: { children: React.ReactNode })
   return (
     <>
       <Script
+        id="admin-theme-bootstrap"
         dangerouslySetInnerHTML={{ __html: buildAdminThemeBootstrapScript() }}
       />
       <AdminThemeShell>
