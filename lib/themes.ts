@@ -4,6 +4,7 @@ export const appThemes = {
   commerceGold: "commerce-gold",
   oceanCyan: "ocean-cyan",
   sunsetCoral: "sunset-coral",
+  stripeBlue: "stripe-blue",
 } as const;
 
 export type AppTheme = (typeof appThemes)[keyof typeof appThemes];
@@ -14,6 +15,7 @@ export const appThemeOptions = [
   { value: appThemes.commerceGold, label: "Commerce Gold" },
   { value: appThemes.oceanCyan, label: "Ocean Cyan" },
   { value: appThemes.sunsetCoral, label: "Sunset Coral" },
+  { value: appThemes.stripeBlue, label: "Affiliate Ember" },
 ] as const;
 
 export const appThemeValues = appThemeOptions.map((theme) => theme.value) as [

@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Coins, Moon, Palette, Sprout, SunMedium, Waves } from "lucide-react";
+import { Check, Coins, CreditCard, Moon, Palette, Sprout, SunMedium, Waves } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -47,6 +47,12 @@ const onboardingThemeOptions = [
     label: "Sunset Coral",
     description: "Warm, editorial, personality-first",
     icon: SunMedium,
+  },
+  {
+    value: appThemes.stripeBlue,
+    label: "Stripe Blue",
+    description: "Fintech-inspired, clean public polish with premium depth",
+    icon: CreditCard,
   },
 ] as const;
 

@@ -247,6 +247,83 @@
   --sidebar-ring: #f97360;
 }
 
+[data-theme="stripe-blue"] {
+  color-scheme: light;
+  --background: #fff9f2;
+  --foreground: #331a10;
+  --surface: #ffffff;
+  --surface-soft: #fff0e2;
+  --card: #ffffff;
+  --card-foreground: #331a10;
+  --popover: #ffffff;
+  --popover-foreground: #331a10;
+  --primary: #ff6b2c;
+  --primary-hover: #e85a20;
+  --primary-foreground: #ffffff;
+  --secondary: #0f9f6e;
+  --secondary-foreground: #ffffff;
+  --muted: #fff4eb;
+  --muted-foreground: #7b5a47;
+  --accent: #f6b73c;
+  --accent-foreground: #4d2a12;
+  --destructive: #dc2626;
+  --border: #f0d9c8;
+  --input: #f0d9c8;
+  --ring: #ff6b2c;
+  --chart-1: #ff6b2c;
+  --chart-2: #0f9f6e;
+  --chart-3: #f6b73c;
+  --chart-4: #c2410c;
+  --chart-5: #fb923c;
+  --radius: 0.75rem;
+  --sidebar: #fffdf9;
+  --sidebar-foreground: #331a10;
+  --sidebar-primary: #ff6b2c;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #fff4eb;
+  --sidebar-accent-foreground: #331a10;
+  --sidebar-border: #f0d9c8;
+  --sidebar-ring: #ff6b2c;
+}
+
+[data-admin-theme-context="true"][data-theme="stripe-blue"] {
+  color-scheme: dark;
+  --background: #1a120c;
+  --foreground: #fff5eb;
+  --surface: #241811;
+  --surface-soft: #312117;
+  --card: rgb(255 255 255 / 0.05);
+  --card-foreground: #fff5eb;
+  --popover: #241811;
+  --popover-foreground: #fff5eb;
+  --primary: #ff7a3d;
+  --primary-hover: #ff8b57;
+  --primary-foreground: #ffffff;
+  --secondary: #34d399;
+  --secondary-foreground: #052e1f;
+  --muted: #312117;
+  --muted-foreground: #c7a68c;
+  --accent: #fbbf24;
+  --accent-foreground: #3b2208;
+  --destructive: #ef4444;
+  --border: rgb(255 190 136 / 0.16);
+  --input: rgb(255 190 136 / 0.18);
+  --ring: #ff8b57;
+  --chart-1: #ff7a3d;
+  --chart-2: #34d399;
+  --chart-3: #fbbf24;
+  --chart-4: #fb923c;
+  --chart-5: #f97316;
+  --sidebar: #21150f;
+  --sidebar-foreground: #fff5eb;
+  --sidebar-primary: #ff7a3d;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #312117;
+  --sidebar-accent-foreground: #fff5eb;
+  --sidebar-border: rgb(255 190 136 / 0.16);
+  --sidebar-ring: #ff8b57;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -271,6 +348,28 @@
         circle at top right,
         color-mix(in srgb, var(--secondary) 20%, transparent),
         transparent 30%
+      );
+  }
+
+  [data-theme="stripe-blue"] .theme-hero-glow {
+    background:
+      radial-gradient(circle at 14% 18%, color-mix(in srgb, var(--primary) 26%, white), transparent 34%),
+      radial-gradient(circle at 82% 12%, color-mix(in srgb, var(--accent) 24%, white), transparent 30%),
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--background) 90%, white),
+        color-mix(in srgb, var(--surface-soft) 82%, white)
+      );
+  }
+
+  [data-admin-theme-context="true"][data-theme="stripe-blue"] .theme-hero-glow {
+    background:
+      radial-gradient(circle at 12% 18%, color-mix(in srgb, var(--primary) 36%, transparent), transparent 35%),
+      radial-gradient(circle at 84% 8%, color-mix(in srgb, var(--accent) 24%, transparent), transparent 32%),
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--background) 94%, black),
+        color-mix(in srgb, var(--surface) 90%, black)
       );
   }
 }

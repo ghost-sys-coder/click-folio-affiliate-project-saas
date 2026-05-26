@@ -236,6 +236,7 @@ export function LandingPageGeneratorForm({
                           <SelectItem value={appThemes.commerceGold}>Commerce Gold (Premium)</SelectItem>
                           <SelectItem value={appThemes.oceanCyan}>Ocean Cyan (Bold)</SelectItem>
                           <SelectItem value={appThemes.sunsetCoral}>Sunset Coral (Editorial)</SelectItem>
+                          <SelectItem value={appThemes.stripeBlue}>Affiliate Ember (High-Converting)</SelectItem>
                         </SelectGroup>
                       </SelectContent>
                     </Select>

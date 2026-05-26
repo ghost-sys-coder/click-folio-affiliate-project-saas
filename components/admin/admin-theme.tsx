@@ -2,16 +2,17 @@
 
 import * as React from "react";
 import type { LucideIcon } from "lucide-react";
-import { Coins, Moon, Sprout, SunMedium, Waves } from "lucide-react";
+import { Coins, Megaphone, Moon, Sprout, SunMedium, Waves } from "lucide-react";
 
 import {
   appThemes,
-  getThemeMode,
   type AppTheme,
 } from "@/lib/themes";
 import {
   ADMIN_THEME_EVENT,
+  ADMIN_THEME_CONTEXT_ATTRIBUTE,
   ADMIN_THEME_STORAGE_KEY,
+  getAdminThemeMode,
   resolveAdminTheme,
 } from "@/lib/admin-theme-bootstrap";
 
@@ -52,6 +53,12 @@ export const adminThemeOptions: AdminThemeOption[] = [
     label: "Sunset Coral",
     description: "Warm editorial theme with soft highlights",
     icon: SunMedium,
+  },
+  {
+    value: appThemes.stripeBlue,
+    label: "Affiliate Ember",
+    description: "Warm offer-driven theme with bold CTA energy",
+    icon: Megaphone,
   },
 ];
 
@@ -116,10 +123,12 @@ export function AdminThemeShell({ children }: { children: React.ReactNode }) {
     const previousBodyTheme = body.getAttribute("data-theme");
     const previousColorScheme = root.style.colorScheme;
     const previousDarkClass = root.classList.contains("dark");
-    const themeMode = getThemeMode(theme);
+    const themeMode = getAdminThemeMode(theme);
 
     root.setAttribute("data-theme", theme);
     body.setAttribute("data-theme", theme);
+    root.setAttribute(ADMIN_THEME_CONTEXT_ATTRIBUTE, "true");
+    body.setAttribute(ADMIN_THEME_CONTEXT_ATTRIBUTE, "true");
     root.style.colorScheme = themeMode;
     root.classList.toggle("dark", themeMode === "dark");
 
@@ -135,6 +144,9 @@ export function AdminThemeShell({ children }: { children: React.ReactNode }) {
       } else {
         body.removeAttribute("data-theme");
       }
+
+      root.removeAttribute(ADMIN_THEME_CONTEXT_ATTRIBUTE);
+      body.removeAttribute(ADMIN_THEME_CONTEXT_ATTRIBUTE);
 
       root.style.colorScheme = previousColorScheme;
       root.classList.toggle("dark", previousDarkClass);
