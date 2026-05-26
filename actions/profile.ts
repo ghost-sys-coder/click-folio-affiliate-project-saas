@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 
 import { getDb } from "@/db/drizzle";
 import { profilesTable } from "@/db/schema";
-import { getProfileByUserId, getUserByClerkUserId } from "@/db/profiles";
+import { getProfileByUserId } from "@/db/profiles";
 import { validateOnboardingForm } from "@/lib/onboarding";
 import { getCurrentUserPlan } from "@/lib/subscriptions";
 
@@ -57,13 +57,7 @@ export async function updateProfile(
       };
   }
 
-  const user = await getUserByClerkUserId(userPlan.userId);
-
-  if (!user) {
-    return { success: false, message: "User not found." };
-  }
-
-  const profile = await getProfileByUserId(user.id);
+  const profile = await getProfileByUserId(userPlan.userId);
 
   if (!profile) {
     return { success: false, message: "Profile not found." };
